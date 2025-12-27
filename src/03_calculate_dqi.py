@@ -105,23 +105,45 @@ assert abs(sum(w['weight'] for w in DQI_WEIGHTS.values()) - 1.0) < 0.001, "Weigh
 # DQI CALCULATION FUNCTIONS
 # ============================================================================
 
-def normalize_feature(series, method='robust'):
+def normalize_feature(series, method='binary_plus_severity'):
     """
     Normalize a feature to 0-1 scale.
-    Uses robust scaling (percentile-based) to handle outliers.
+
+    Method: binary_plus_severity
+    - Base score: 0.5 if issue exists, 0 if not
+    - Severity bonus: up to 0.5 more based on count relative to 95th percentile
+
+    This ensures that HAVING an issue gets meaningful weight,
+    while still rewarding detection of severe cases.
     """
     if series.max() == 0:
         return pd.Series(0, index=series.index)
 
-    if method == 'robust':
-        # Use 95th percentile as max to reduce outlier impact
+    if method == 'binary_plus_severity':
+        # Base: 0.5 for having any issue
+        has_issue = (series > 0).astype(float) * 0.5
+
+        # Severity: 0 to 0.5 based on magnitude relative to 95th percentile
+        p95 = series.quantile(0.95)
+        if p95 > 0:
+            severity = (series.clip(upper=p95) / p95) * 0.5
+        else:
+            severity = (series / series.max()) * 0.5 if series.max() > 0 else 0
+
+        normalized = has_issue + severity
+
+    elif method == 'binary':
+        # Pure binary: 1 if has issue, 0 if not
+        normalized = (series > 0).astype(float)
+
+    elif method == 'robust':
+        # Original: percentile-based
         p95 = series.quantile(0.95)
         if p95 > 0:
             normalized = series.clip(upper=p95) / p95
         else:
             normalized = series / series.max()
     else:
-        # Simple min-max
         normalized = series / series.max()
 
     return normalized.clip(0, 1).fillna(0)
@@ -176,41 +198,93 @@ def calculate_subject_dqi(df):
 
 def assign_risk_categories(df, score_column='dqi_score_adjusted'):
     """
-    Assign risk categories based on DQI score distribution.
+    Assign risk categories based on CLINICAL thresholds.
 
-    Strategy:
-    - Subjects with ZERO issues = "Low" (no action needed)
-    - Among subjects WITH issues, stratify into High/Medium/Low
+    This approach uses domain-knowledge rules rather than percentiles,
+    ensuring that clinically important issues are always flagged appropriately.
 
-    Categories:
-    - High: Top 15% of subjects with issues (>= 85th percentile)
-    - Medium: Next 35% (>= 50th percentile but < High)
-    - Low: Everyone else (including zero-issue subjects)
+    HIGH RISK (immediate attention):
+      - Pending SAE
+      - 3+ different issue types
+      - Uncoded MedDRA (adverse event) terms
+      - 45+ days outstanding
+      - 45+ days page missing
+
+    MEDIUM RISK (active monitoring):
+      - 2 issue types
+      - Missing visits
+      - Missing pages
+      - Lab issues
+      - EDRR issues
+      - Uncoded drug terms
+      - Any days outstanding
+      - Any days page missing
+      - 5+ inactivated forms
+
+    LOW RISK:
+      - No significant issues or minor inactivated forms only
     """
     df = df.copy()
 
-    # First, identify subjects with any issues
-    df['has_issues'] = (df[score_column] > 0).astype(int)
+    # Count issue types
+    issue_cols = [col for col in DQI_WEIGHTS.keys() if col in df.columns]
+    df['n_issue_types'] = (df[issue_cols] > 0).sum(axis=1)
+    df['has_issues'] = (df['n_issue_types'] > 0).astype(int)
 
-    # Get thresholds from subjects WITH issues only
-    scores_with_issues = df[df['has_issues'] == 1][score_column]
+    # HIGH RISK criteria
+    high_risk = pd.Series(False, index=df.index)
 
-    if len(scores_with_issues) > 0:
-        # Top 15% = High, Next 35% = Medium, Bottom 50% of those with issues = Low
-        high_threshold = scores_with_issues.quantile(0.85)
-        medium_threshold = scores_with_issues.quantile(0.50)
+    if 'sae_pending_count' in df.columns:
+        high_risk |= (df['sae_pending_count'] > 0)
 
-        # Ensure minimum thresholds make sense
-        high_threshold = max(high_threshold, 0.10)
-        medium_threshold = max(medium_threshold, 0.02)
-    else:
-        high_threshold = 0.10
-        medium_threshold = 0.02
+    high_risk |= (df['n_issue_types'] >= 3)
 
-    # Assign categories - ORDER MATTERS! Start with Low, then override
+    if 'uncoded_meddra_count' in df.columns:
+        high_risk |= (df['uncoded_meddra_count'] > 0)
+
+    if 'max_days_outstanding' in df.columns:
+        high_risk |= (df['max_days_outstanding'] > 45)
+
+    if 'max_days_page_missing' in df.columns:
+        high_risk |= (df['max_days_page_missing'] > 45)
+
+    # MEDIUM RISK criteria
+    medium_risk = pd.Series(False, index=df.index)
+
+    medium_risk |= (df['n_issue_types'] == 2)
+
+    if 'missing_visit_count' in df.columns:
+        medium_risk |= (df['missing_visit_count'] > 0)
+
+    if 'missing_pages_count' in df.columns:
+        medium_risk |= (df['missing_pages_count'] > 0)
+
+    if 'lab_issues_count' in df.columns:
+        medium_risk |= (df['lab_issues_count'] > 0)
+
+    if 'edrr_open_issues' in df.columns:
+        medium_risk |= (df['edrr_open_issues'] > 0)
+
+    if 'uncoded_whodd_count' in df.columns:
+        medium_risk |= (df['uncoded_whodd_count'] > 0)
+
+    if 'max_days_outstanding' in df.columns:
+        medium_risk |= (df['max_days_outstanding'] > 0)
+
+    if 'max_days_page_missing' in df.columns:
+        medium_risk |= (df['max_days_page_missing'] > 0)
+
+    if 'inactivated_forms_count' in df.columns:
+        medium_risk |= (df['inactivated_forms_count'] >= 5)
+
+    # Assign categories (High takes precedence over Medium)
     df['risk_category'] = 'Low'
-    df.loc[df[score_column] >= medium_threshold, 'risk_category'] = 'Medium'
-    df.loc[df[score_column] >= high_threshold, 'risk_category'] = 'High'
+    df.loc[medium_risk, 'risk_category'] = 'Medium'
+    df.loc[high_risk, 'risk_category'] = 'High'
+
+    # Return thresholds as description (not numeric)
+    high_threshold = "Clinical criteria (SAE, 3+ issues, uncoded MedDRA, 45+ days)"
+    medium_threshold = "Clinical criteria (2 issues, missing data, lab/EDRR issues)"
 
     return df, high_threshold, medium_threshold
 
@@ -334,10 +408,10 @@ def calculate_dqi():
 
     df, high_thresh, med_thresh = assign_risk_categories(df)
 
-    print(f"\nThresholds:")
-    print(f"  High Risk:   DQI > {high_thresh:.3f}")
-    print(f"  Medium Risk: DQI > {med_thresh:.3f}")
-    print(f"  Low Risk:    DQI <= {med_thresh:.3f}")
+    print(f"\nRisk Criteria:")
+    print(f"  HIGH: Pending SAE, 3+ issue types, uncoded MedDRA, or 45+ days overdue")
+    print(f"  MEDIUM: 2 issue types, missing visits/pages, lab/EDRR issues, or any days overdue")
+    print(f"  LOW: No significant issues")
 
     print(f"\nDQI Score Statistics:")
     print(f"  Min:    {df['dqi_score_adjusted'].min():.3f}")
