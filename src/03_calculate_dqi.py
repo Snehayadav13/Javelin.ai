@@ -250,6 +250,10 @@ def try_tabpfn_shap(X, y):
 
         # Train TabPFN
         print(f"   Training TabPFN classifier on {device.upper()}...")
+        print(f"   (This may take 2-5 minutes on first run while model loads...)")
+
+        import time
+        start_time = time.time()
 
         try:
             # Try with ignore_pretraining_limits for newer versions
@@ -263,7 +267,9 @@ def try_tabpfn_shap(X, y):
                 clf = TabPFNClassifier(device=device)
 
         clf.fit(X_train.values, y_train.values)
-        print("   ✅ TabPFN trained successfully!")
+
+        train_time = time.time() - start_time
+        print(f"   ✅ TabPFN trained successfully! (took {train_time:.1f} seconds)")
 
         # Evaluate
         y_pred = clf.predict(X_test.values)
