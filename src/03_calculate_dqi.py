@@ -183,8 +183,8 @@ def assign_risk_categories(df, score_column='dqi_score_adjusted'):
     - Among subjects WITH issues, stratify into High/Medium/Low
 
     Categories:
-    - High: Top 15% of subjects with issues
-    - Medium: Next 35% of subjects with issues
+    - High: Top 15% of subjects with issues (>= 85th percentile)
+    - Medium: Next 35% (>= 50th percentile but < High)
     - Low: Everyone else (including zero-issue subjects)
     """
     df = df.copy()
@@ -207,11 +207,10 @@ def assign_risk_categories(df, score_column='dqi_score_adjusted'):
         high_threshold = 0.10
         medium_threshold = 0.02
 
-    # Assign categories
+    # Assign categories - ORDER MATTERS! Start with Low, then override
     df['risk_category'] = 'Low'
-    df.loc[(df[score_column] > 0) & (df[score_column] <= medium_threshold), 'risk_category'] = 'Low'
-    df.loc[df[score_column] > medium_threshold, 'risk_category'] = 'Medium'
-    df.loc[df[score_column] > high_threshold, 'risk_category'] = 'High'
+    df.loc[df[score_column] >= medium_threshold, 'risk_category'] = 'Medium'
+    df.loc[df[score_column] >= high_threshold, 'risk_category'] = 'High'
 
     return df, high_threshold, medium_threshold
 
@@ -266,9 +265,10 @@ def aggregate_site_dqi(df):
         high_threshold = 0.05
         medium_threshold = 0.01
 
+    # Assign categories - ORDER MATTERS!
     site_agg['site_risk_category'] = 'Low'
-    site_agg.loc[site_agg['avg_dqi_adjusted'] > medium_threshold, 'site_risk_category'] = 'Medium'
-    site_agg.loc[site_agg['avg_dqi_adjusted'] > high_threshold, 'site_risk_category'] = 'High'
+    site_agg.loc[site_agg['avg_dqi_adjusted'] >= medium_threshold, 'site_risk_category'] = 'Medium'
+    site_agg.loc[site_agg['avg_dqi_adjusted'] >= high_threshold, 'site_risk_category'] = 'High'
 
     return site_agg
 
