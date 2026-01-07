@@ -65,6 +65,14 @@ st.markdown("""
         margin: 1.5rem 0 1rem 0;
     }
 
+    .section-subtitle {
+        font-size: 0.9rem;
+        color: #a0aec0;
+        margin-top: -0.5rem;
+        margin-bottom: 1rem;
+        padding-left: 1.2rem;
+    }
+
     /* Site cards - dark mode compatible */
     .site-card {
         background-color: rgba(45, 55, 72, 0.6);
@@ -145,6 +153,17 @@ st.markdown("""
         line-height: 1.5;
     }
 
+    /* Context note box */
+    .context-note {
+        background-color: rgba(113, 128, 150, 0.2);
+        border: 1px solid #718096;
+        border-radius: 6px;
+        padding: 0.6rem 1rem;
+        margin: 0.5rem 0;
+        font-size: 0.85rem;
+        color: #cbd5e0;
+    }
+
     /* Footer */
     .footer {
         text-align: center;
@@ -195,6 +214,15 @@ PRIORITY_COLORS = {
     'MEDIUM': '#d69e2e',
     'LOW': '#38a169'
 }
+
+# Issue severity gradient (warm colors for more issues)
+ISSUE_GRADIENT = [
+    '#3182ce',  # Blue (low)
+    '#805ad5',  # Purple
+    '#d69e2e',  # Yellow
+    '#dd6b20',  # Orange
+    '#c53030',  # Red (high)
+]
 
 # ============================================================================
 # DATA LOADING
@@ -261,27 +289,26 @@ def load_all_data():
 def calculate_issue_summary(study_df: pd.DataFrame) -> pd.DataFrame:
     """Calculate issue summary from study data."""
     issue_columns = {
-        'sae_pending_count': ('SAE Pending', 'CRITICAL'),
-        'missing_visit_count': ('Missing Visits', 'HIGH'),
-        'lab_issues_count': ('Lab Issues', 'MEDIUM'),
-        'missing_pages_count': ('Missing Pages', 'MEDIUM'),
-        'inactivated_forms_count': ('Inactivated Forms', 'LOW'),
-        'edrr_open_issues': ('EDRR Issues', 'LOW'),
-        'total_uncoded_count': ('Uncoded Terms', 'HIGH'),
+        'sae_pending_count': 'SAE Pending',
+        'missing_visit_count': 'Missing Visits',
+        'lab_issues_count': 'Lab Issues',
+        'missing_pages_count': 'Missing Pages',
+        'inactivated_forms_count': 'Inactivated Forms',
+        'edrr_open_issues': 'EDRR Issues',
+        'total_uncoded_count': 'Uncoded Terms',
     }
 
     issues = []
-    for col, (name, priority) in issue_columns.items():
+    for col, name in issue_columns.items():
         if col in study_df.columns:
             total = int(study_df[col].sum())
             if total > 0:
                 issues.append({
                     'Category': name,
-                    'Count': total,
-                    'Priority': priority
+                    'Count': total
                 })
 
-    return pd.DataFrame(issues).sort_values('Count', ascending=False)
+    return pd.DataFrame(issues).sort_values('Count', ascending=True)  # Ascending for horizontal bar
 
 
 def format_number(num):
@@ -294,12 +321,21 @@ def get_priority_class(priority: str) -> str:
     return f"priority-{priority.lower()}"
 
 
+def get_color_by_value(value, max_value, colors=ISSUE_GRADIENT):
+    """Get color from gradient based on value."""
+    if max_value == 0:
+        return colors[0]
+    ratio = value / max_value
+    index = min(int(ratio * (len(colors) - 1)), len(colors) - 1)
+    return colors[index]
+
+
 # ============================================================================
 # VISUALIZATION FUNCTIONS
 # ============================================================================
 
-def create_priority_donut(df: pd.DataFrame) -> go.Figure:
-    """Create a donut chart for priority distribution."""
+def create_priority_donut(df: pd.DataFrame, total_sites: int) -> go.Figure:
+    """Create a donut chart for priority distribution with context."""
     priority_counts = df['priority'].value_counts()
 
     # Ensure consistent order
@@ -307,30 +343,43 @@ def create_priority_donut(df: pd.DataFrame) -> go.Figure:
     values = [priority_counts.get(p, 0) for p in priority_order]
     colors = [PRIORITY_COLORS.get(p, '#gray') for p in priority_order]
 
+    # Filter out zero values for cleaner display
+    non_zero = [(p, v, c) for p, v, c in zip(priority_order, values, colors) if v > 0]
+    if non_zero:
+        labels, values, colors = zip(*non_zero)
+    else:
+        labels, values, colors = priority_order, [0]*4, [PRIORITY_COLORS[p] for p in priority_order]
+
     fig = go.Figure(data=[go.Pie(
-        labels=priority_order,
+        labels=labels,
         values=values,
-        hole=0.5,
+        hole=0.55,
         marker_colors=colors,
         textinfo='label+percent',
         textposition='outside',
-        textfont=dict(size=14, color='#e2e8f0'),
-        hovertemplate='<b>%{label}</b><br>Sites: %{value}<br>Percentage: %{percent}<extra></extra>'
+        textfont=dict(size=13, color='#e2e8f0'),
+        hovertemplate='<b>%{label}</b><br>Sites: %{value}<br>Percentage: %{percent}<extra></extra>',
+        pull=[0.02] * len(labels)  # Slight separation
     )])
+
+    flagged_count = len(df)
+    flagged_pct = (flagged_count / total_sites * 100) if total_sites > 0 else 0
 
     fig.update_layout(
         showlegend=False,
-        margin=dict(t=30, b=30, l=30, r=30),
-        height=400,
+        margin=dict(t=40, b=40, l=40, r=40),
+        height=420,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
-        annotations=[dict(
-            text=f'<b>{len(df)}</b><br>Sites',
-            x=0.5, y=0.5,
-            font_size=20,
-            font_color='#e2e8f0',
-            showarrow=False
-        )]
+        annotations=[
+            dict(
+                text=f'<b>{flagged_count}</b><br>Flagged<br>Sites',
+                x=0.5, y=0.5,
+                font_size=18,
+                font_color='#e2e8f0',
+                showarrow=False
+            )
+        ]
     )
 
     return fig
@@ -351,14 +400,15 @@ def create_region_bar(df: pd.DataFrame) -> go.Figure:
         textposition='outside',
         textfont=dict(size=14, color='#e2e8f0'),
         hovertemplate='<b>%{x}</b><br>Sites: %{y}<extra></extra>',
-        cliponaxis=False
     )])
+
+    max_val = region_counts['Count'].max()
 
     fig.update_layout(
         xaxis_title='',
         yaxis_title='Number of Flagged Sites',
-        margin=dict(t=50, b=60, l=80, r=30),
-        height=400,
+        margin=dict(t=60, b=70, l=80, r=40),
+        height=420,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
@@ -370,7 +420,7 @@ def create_region_bar(df: pd.DataFrame) -> go.Figure:
             tickfont=dict(size=13, color='#cbd5e0'),
             gridcolor='#4a5568',
             title_font=dict(size=14, color='#e2e8f0'),
-            range=[0, region_counts['Count'].max() * 1.15]
+            range=[0, max_val * 1.20]  # Extra headroom for labels
         ),
         font=dict(color='#e2e8f0')
     )
@@ -379,11 +429,14 @@ def create_region_bar(df: pd.DataFrame) -> go.Figure:
 
 
 def create_issue_bar(issue_df: pd.DataFrame) -> go.Figure:
-    """Create a horizontal bar chart for issue categories."""
+    """Create a horizontal bar chart for issue categories with gradient colors."""
     if issue_df.empty:
         return go.Figure()
 
-    colors = [PRIORITY_COLORS.get(p, '#gray') for p in issue_df['Priority']]
+    max_count = issue_df['Count'].max()
+
+    # Color by count (gradient from blue to red)
+    colors = [get_color_by_value(c, max_count) for c in issue_df['Count']]
 
     fig = go.Figure(data=[go.Bar(
         y=issue_df['Category'],
@@ -392,27 +445,25 @@ def create_issue_bar(issue_df: pd.DataFrame) -> go.Figure:
         marker_color=colors,
         text=[format_number(c) for c in issue_df['Count']],
         textposition='outside',
-        textfont=dict(size=13, color='#e2e8f0'),
+        textfont=dict(size=12, color='#e2e8f0'),
         hovertemplate='<b>%{y}</b><br>Count: %{x:,}<extra></extra>',
-        cliponaxis=False
     )])
 
     fig.update_layout(
         xaxis_title='Number of Issues',
         yaxis_title='',
-        margin=dict(t=30, b=60, l=180, r=120),
-        height=450,
+        margin=dict(t=40, b=70, l=140, r=100),
+        height=420,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
-            tickfont=dict(size=13, color='#cbd5e0'),
+            tickfont=dict(size=12, color='#cbd5e0'),
             gridcolor='#4a5568',
-            title_font=dict(size=14, color='#e2e8f0'),
-            range=[0, issue_df['Count'].max() * 1.12]
+            title_font=dict(size=13, color='#e2e8f0'),
+            range=[0, max_count * 1.18]  # Extra space for labels
         ),
         yaxis=dict(
-            tickfont=dict(size=13, color='#cbd5e0'),
-            autorange='reversed'
+            tickfont=dict(size=12, color='#cbd5e0'),
         ),
         font=dict(color='#e2e8f0')
     )
@@ -435,19 +486,19 @@ def create_dqi_histogram(df: pd.DataFrame) -> go.Figure:
     fig.update_layout(
         xaxis_title='DQI Score',
         yaxis_title='Number of Sites',
-        margin=dict(t=30, b=60, l=80, r=30),
+        margin=dict(t=40, b=70, l=80, r=40),
         height=400,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
-            tickfont=dict(size=13, color='#cbd5e0'),
+            tickfont=dict(size=12, color='#cbd5e0'),
             gridcolor='#4a5568',
-            title_font=dict(size=14, color='#e2e8f0')
+            title_font=dict(size=13, color='#e2e8f0')
         ),
         yaxis=dict(
-            tickfont=dict(size=13, color='#cbd5e0'),
+            tickfont=dict(size=12, color='#cbd5e0'),
             gridcolor='#4a5568',
-            title_font=dict(size=14, color='#e2e8f0')
+            title_font=dict(size=13, color='#e2e8f0')
         ),
         font=dict(color='#e2e8f0'),
         bargap=0.05
@@ -463,7 +514,7 @@ def create_study_comparison(study_df: pd.DataFrame) -> go.Figure:
     fig = make_subplots(
         rows=1, cols=2,
         subplot_titles=('Subjects per Study', 'Sites per Study'),
-        horizontal_spacing=0.15
+        horizontal_spacing=0.12
     )
 
     # Subjects bar
@@ -475,9 +526,8 @@ def create_study_comparison(study_df: pd.DataFrame) -> go.Figure:
             name='Subjects',
             text=top_studies['subject_count'],
             textposition='outside',
-            textfont=dict(size=11, color='#e2e8f0'),
+            textfont=dict(size=10, color='#e2e8f0'),
             hovertemplate='<b>%{x}</b><br>Subjects: %{y:,}<extra></extra>',
-            cliponaxis=False
         ),
         row=1, col=1
     )
@@ -491,17 +541,16 @@ def create_study_comparison(study_df: pd.DataFrame) -> go.Figure:
             name='Sites',
             text=top_studies['site_count'],
             textposition='outside',
-            textfont=dict(size=11, color='#e2e8f0'),
+            textfont=dict(size=10, color='#e2e8f0'),
             hovertemplate='<b>%{x}</b><br>Sites: %{y:,}<extra></extra>',
-            cliponaxis=False
         ),
         row=1, col=2
     )
 
     fig.update_layout(
         showlegend=False,
-        margin=dict(t=70, b=120, l=80, r=30),
-        height=500,
+        margin=dict(t=80, b=100, l=80, r=40),
+        height=480,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         font=dict(color='#e2e8f0')
@@ -509,22 +558,22 @@ def create_study_comparison(study_df: pd.DataFrame) -> go.Figure:
 
     fig.update_xaxes(
         tickangle=-45,
-        tickfont=dict(size=11, color='#cbd5e0'),
+        tickfont=dict(size=10, color='#cbd5e0'),
         gridcolor='#4a5568'
     )
     fig.update_yaxes(
-        tickfont=dict(size=12, color='#cbd5e0'),
+        tickfont=dict(size=11, color='#cbd5e0'),
         gridcolor='#4a5568',
-        range=[0, top_studies['subject_count'].max() * 1.15], row=1, col=1
+        range=[0, top_studies['subject_count'].max() * 1.18], row=1, col=1
     )
     fig.update_yaxes(
-        tickfont=dict(size=12, color='#cbd5e0'),
+        tickfont=dict(size=11, color='#cbd5e0'),
         gridcolor='#4a5568',
-        range=[0, top_studies['site_count'].max() * 1.15], row=1, col=2
+        range=[0, top_studies['site_count'].max() * 1.18], row=1, col=2
     )
 
     # Update subplot titles
-    fig.update_annotations(font=dict(size=14, color='#e2e8f0'))
+    fig.update_annotations(font=dict(size=13, color='#e2e8f0'))
 
     return fig
 
@@ -547,28 +596,29 @@ def create_sae_chart(study_df: pd.DataFrame) -> go.Figure:
         marker_line_width=1,
         text=sae_data['sae_pending_count'],
         textposition='outside',
-        textfont=dict(size=12, color='#e2e8f0'),
+        textfont=dict(size=11, color='#e2e8f0'),
         hovertemplate='<b>%{x}</b><br>Pending SAE: %{y}<extra></extra>',
-        cliponaxis=False
     )])
+
+    max_val = sae_data['sae_pending_count'].max()
 
     fig.update_layout(
         xaxis_title='',
         yaxis_title='Pending SAE Count',
-        margin=dict(t=50, b=100, l=80, r=30),
+        margin=dict(t=60, b=100, l=80, r=40),
         height=450,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
             tickangle=-45,
-            tickfont=dict(size=12, color='#cbd5e0'),
+            tickfont=dict(size=11, color='#cbd5e0'),
             gridcolor='#4a5568'
         ),
         yaxis=dict(
-            tickfont=dict(size=13, color='#cbd5e0'),
+            tickfont=dict(size=12, color='#cbd5e0'),
             gridcolor='#4a5568',
-            title_font=dict(size=14, color='#e2e8f0'),
-            range=[0, sae_data['sae_pending_count'].max() * 1.15]
+            title_font=dict(size=13, color='#e2e8f0'),
+            range=[0, max_val * 1.18]
         ),
         font=dict(color='#e2e8f0')
     )
@@ -602,24 +652,70 @@ def create_heatmap(study_df: pd.DataFrame) -> go.Figure:
         z=heatmap_data.values,
         x=heatmap_data.columns,
         y=metric_labels,
-        colorscale='Reds',
+        colorscale='YlOrRd',  # Yellow-Orange-Red scale
         text=heatmap_data.values,
         texttemplate='%{text:.0f}',
-        textfont=dict(size=11, color='#1a202c'),
+        textfont=dict(size=10, color='#1a202c'),
         hovertemplate='Study: %{x}<br>Metric: %{y}<br>Count: %{z}<extra></extra>'
     ))
 
     fig.update_layout(
-        margin=dict(t=30, b=120, l=150, r=30),
-        height=450,
+        margin=dict(t=40, b=100, l=140, r=40),
+        height=420,
         paper_bgcolor='rgba(0,0,0,0)',
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(
             tickangle=-45,
-            tickfont=dict(size=11, color='#cbd5e0')
+            tickfont=dict(size=10, color='#cbd5e0')
         ),
         yaxis=dict(
-            tickfont=dict(size=12, color='#cbd5e0')
+            tickfont=dict(size=11, color='#cbd5e0')
+        ),
+        font=dict(color='#e2e8f0')
+    )
+
+    return fig
+
+
+def create_priority_risk_bar(filtered_df: pd.DataFrame) -> go.Figure:
+    """Create bar chart for high-risk subjects by priority."""
+    priority_risk = filtered_df.groupby('priority')['high_risk_count'].sum().reset_index()
+
+    # Ensure order
+    priority_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+    priority_risk['order'] = priority_risk['priority'].map(priority_order)
+    priority_risk = priority_risk.sort_values('order')
+
+    colors = [PRIORITY_COLORS.get(p, '#gray') for p in priority_risk['priority']]
+
+    fig = go.Figure(data=[go.Bar(
+        x=priority_risk['priority'],
+        y=priority_risk['high_risk_count'],
+        marker_color=colors,
+        text=priority_risk['high_risk_count'],
+        textposition='outside',
+        textfont=dict(size=12, color='#e2e8f0'),
+    )])
+
+    max_val = priority_risk['high_risk_count'].max() if len(priority_risk) > 0 else 100
+
+    fig.update_layout(
+        xaxis_title='Priority Level',
+        yaxis_title='High-Risk Subjects',
+        margin=dict(t=60, b=70, l=80, r=40),
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(
+            tickfont=dict(size=12, color='#cbd5e0'),
+            gridcolor='#4a5568',
+            title_font=dict(size=13, color='#e2e8f0')
+        ),
+        yaxis=dict(
+            tickfont=dict(size=12, color='#cbd5e0'),
+            gridcolor='#4a5568',
+            title_font=dict(size=13, color='#e2e8f0'),
+            range=[0, max_val * 1.20]
         ),
         font=dict(color='#e2e8f0')
     )
@@ -666,11 +762,14 @@ def render_executive_overview(data: dict):
 
     with col1:
         st.markdown('<div class="section-header">Sites by Priority Level</div>', unsafe_allow_html=True)
-        fig = create_priority_donut(rec_df)
+        flagged_pct = len(rec_df) / int(total_sites) * 100 if total_sites > 0 else 0
+        st.markdown(f'<div class="section-subtitle">{len(rec_df):,} of {int(total_sites):,} sites flagged for action ({flagged_pct:.1f}%)</div>', unsafe_allow_html=True)
+        fig = create_priority_donut(rec_df, int(total_sites))
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         st.markdown('<div class="section-header">Flagged Sites by Region</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-subtitle">Geographic distribution of sites requiring attention</div>', unsafe_allow_html=True)
         fig = create_region_bar(rec_df)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -678,6 +777,7 @@ def render_executive_overview(data: dict):
 
     # Issue summary
     st.markdown('<div class="section-header">Issue Categories Across Portfolio</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">Color intensity indicates issue volume (blue → red = low → high)</div>', unsafe_allow_html=True)
     issue_df = calculate_issue_summary(study_df)
     if not issue_df.empty:
         fig = create_issue_bar(issue_df)
@@ -700,6 +800,7 @@ def render_executive_overview(data: dict):
 def render_site_analysis(data: dict, filtered_df: pd.DataFrame):
     """Render the Site Analysis page."""
     st.markdown('<div class="section-header">High Priority Sites</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">Showing top sites requiring immediate attention</div>', unsafe_allow_html=True)
 
     # Top critical sites
     critical_high = filtered_df[filtered_df['priority'].isin(['CRITICAL', 'HIGH'])].nlargest(15, 'avg_dqi_score')
@@ -730,51 +831,14 @@ def render_site_analysis(data: dict, filtered_df: pd.DataFrame):
 
     with col1:
         st.markdown('<div class="section-header">DQI Score Distribution</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-subtitle">Distribution of Data Quality Index across flagged sites</div>', unsafe_allow_html=True)
         fig = create_dqi_histogram(filtered_df)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         st.markdown('<div class="section-header">High-Risk Subjects by Priority</div>', unsafe_allow_html=True)
-        priority_risk = filtered_df.groupby('priority')['high_risk_count'].sum().reset_index()
-
-        # Ensure order
-        priority_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-        priority_risk['order'] = priority_risk['priority'].map(priority_order)
-        priority_risk = priority_risk.sort_values('order')
-
-        colors = [PRIORITY_COLORS.get(p, '#gray') for p in priority_risk['priority']]
-
-        fig = go.Figure(data=[go.Bar(
-            x=priority_risk['priority'],
-            y=priority_risk['high_risk_count'],
-            marker_color=colors,
-            text=priority_risk['high_risk_count'],
-            textposition='outside',
-            textfont=dict(size=13, color='#e2e8f0'),
-            cliponaxis=False
-        )])
-
-        fig.update_layout(
-            xaxis_title='Priority Level',
-            yaxis_title='High-Risk Subjects',
-            margin=dict(t=50, b=60, l=80, r=30),
-            height=400,
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(
-                tickfont=dict(size=13, color='#cbd5e0'),
-                gridcolor='#4a5568',
-                title_font=dict(size=14, color='#e2e8f0')
-            ),
-            yaxis=dict(
-                tickfont=dict(size=13, color='#cbd5e0'),
-                gridcolor='#4a5568',
-                title_font=dict(size=14, color='#e2e8f0'),
-                range=[0, priority_risk['high_risk_count'].max() * 1.15]
-            ),
-            font=dict(color='#e2e8f0')
-        )
-
+        st.markdown('<div class="section-subtitle">Number of high-risk subjects within each priority tier</div>', unsafe_allow_html=True)
+        fig = create_priority_risk_bar(filtered_df)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -783,12 +847,23 @@ def render_study_analysis(data: dict):
     study_df = data['studies']
 
     st.markdown('<div class="section-header">Study Comparison</div>', unsafe_allow_html=True)
+
+    # Check for dominant study
+    max_subjects = study_df['subject_count'].max()
+    dominant_study = study_df[study_df['subject_count'] == max_subjects]['study'].iloc[0]
+    total_subjects = study_df['subject_count'].sum()
+    dominant_pct = max_subjects / total_subjects * 100
+
+    if dominant_pct > 30:
+        st.markdown(f'<div class="context-note">ℹ️ <strong>{dominant_study}</strong> represents the largest ongoing trial ({dominant_pct:.0f}% of subjects). This is typical for Phase III global studies with extensive enrollment.</div>', unsafe_allow_html=True)
+
     fig = create_study_comparison(study_df)
     st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("---")
 
     st.markdown('<div class="section-header">Issue Heatmap by Study</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">Darker cells indicate higher issue counts per study</div>', unsafe_allow_html=True)
     fig = create_heatmap(study_df)
     st.plotly_chart(fig, use_container_width=True)
 
@@ -827,6 +902,12 @@ def render_critical_actions(data: dict):
         st.metric("Studies Affected", format_number(studies_with_sae))
     with col3:
         st.metric("Critical SAE Studies (>50)", format_number(critical_sae_studies))
+
+    # Context for dominant SAE study
+    max_sae = study_df['sae_pending_count'].max()
+    if max_sae > total_sae * 0.5:
+        dominant_sae_study = study_df[study_df['sae_pending_count'] == max_sae]['study'].iloc[0]
+        st.markdown(f'<div class="context-note">⚠️ <strong>{dominant_sae_study}</strong> accounts for {max_sae:,} of {int(total_sae):,} pending SAE ({max_sae/total_sae*100:.0f}%). This study requires prioritized safety review resources.</div>', unsafe_allow_html=True)
 
     fig = create_sae_chart(study_df)
     st.plotly_chart(fig, use_container_width=True)
@@ -871,6 +952,7 @@ def render_critical_actions(data: dict):
 def render_detailed_reports(data: dict, filtered_df: pd.DataFrame):
     """Render the Detailed Reports page."""
     st.markdown('<div class="section-header">Site Recommendations Data</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-subtitle">Showing {len(filtered_df):,} sites based on current filters</div>', unsafe_allow_html=True)
 
     display_cols = ['study', 'site_id', 'country', 'region', 'priority',
                     'subject_count', 'high_risk_count', 'avg_dqi_score', 'top_issue']
@@ -898,7 +980,7 @@ def render_detailed_reports(data: dict, filtered_df: pd.DataFrame):
     with col1:
         csv_data = filtered_df.to_csv(index=False)
         st.download_button(
-            label="Download Site Recommendations (CSV)",
+            label="📥 Download Site Recommendations (CSV)",
             data=csv_data,
             file_name="site_recommendations.csv",
             mime="text/csv"
@@ -906,7 +988,7 @@ def render_detailed_reports(data: dict, filtered_df: pd.DataFrame):
 
     with col2:
         st.download_button(
-            label="Download Executive Summary (TXT)",
+            label="📥 Download Executive Summary (TXT)",
             data=data['executive_summary'],
             file_name="executive_summary.txt",
             mime="text/plain"
@@ -915,7 +997,7 @@ def render_detailed_reports(data: dict, filtered_df: pd.DataFrame):
     with col3:
         json_data = json.dumps(data['action_items'], indent=2)
         st.download_button(
-            label="Download Action Items (JSON)",
+            label="📥 Download Action Items (JSON)",
             data=json_data,
             file_name="action_items.json",
             mime="application/json"
@@ -966,6 +1048,7 @@ def main():
         st.markdown("### Filters")
 
         rec_df = data['recommendations']
+        total_sites = int(data['studies']['site_count'].sum())
 
         # Study filter
         selected_studies = st.multiselect(
@@ -990,7 +1073,8 @@ def main():
 
         st.markdown("---")
         st.markdown("### Quick Stats")
-        st.markdown(f"**Flagged Sites:** {len(rec_df)}")
+        st.markdown(f"**Total Sites:** {total_sites:,}")
+        st.markdown(f"**Flagged Sites:** {len(rec_df)} ({len(rec_df)/total_sites*100:.1f}%)")
         st.markdown(f"**Critical:** {len(rec_df[rec_df['priority'] == 'CRITICAL'])}")
         st.markdown(f"**High:** {len(rec_df[rec_df['priority'] == 'HIGH'])}")
 
@@ -1019,7 +1103,7 @@ def main():
     st.markdown("""
     <div class="footer">
         <p><strong>JAVELIN.AI</strong> - Clinical Trial Data Quality Intelligence</p>
-        <p>Powered by Domain Knowledge + Local LLM (Ollama)</p>
+        <p>Powered by Domain Knowledge + Generative AI</p>
     </div>
     """, unsafe_allow_html=True)
 
