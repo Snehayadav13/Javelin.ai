@@ -1,6 +1,6 @@
 # JAVELIN.AI - Anomaly Detection Report
 
-*Generated: 2026-01-21 15:13:56*
+*Generated: 2026-01-21 15:27:40*
 
 ---
 
@@ -8,38 +8,53 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Anomalies Detected | 6760 |
-| Sites with Anomalies | 2286 |
-| Critical Anomalies | 762 |
-| High Severity Anomalies | 4525 |
-| Medium Severity Anomalies | 1473 |
+| Total Anomalies Detected | 2428 |
+| Sites with Anomalies | 1451 |
+| Critical Anomalies | 747 |
+| High Severity Anomalies | 479 |
+| Medium Severity Anomalies | 1202 |
 
 ---
 
 ## Anomaly Distribution by Type
 
-- **STATISTICAL_OUTLIER**: 6162 anomalies
-- **PATTERN_ANOMALY**: 518 anomalies
-- **CROSS_STUDY_ANOMALY**: 63 anomalies
-- **VELOCITY_ANOMALY**: 17 anomalies
+- **PATTERN_ANOMALY**: 1885 anomalies
+- **STATISTICAL_OUTLIER**: 451 anomalies
+- **CROSS_STUDY_ANOMALY**: 70 anomalies
+- **VELOCITY_ANOMALY**: 19 anomalies
+- **REGIONAL_ANOMALY**: 3 anomalies
+
+### Pattern Anomaly Breakdown
+
+- SINGLE_ISSUE_DOMINANCE: 680
+- SAE_NOT_FLAGGED: 559
+- SAE_WITHOUT_CODING: 312
+- STALE_MISSING_DATA: 278
+- MAJORITY_HIGH_RISK: 35
+- ZERO_ISSUES_HIGH_VOLUME: 21
 
 
 ---
 
-## Top 10 Sites by Anomaly Score
+## Top 15 Sites by Anomaly Score
 
-| Rank | Study | Site ID | Score | Anomalies | Critical | High | Types |
-|------|-------|---------|-------|-----------|----------|------|-------|
-| 1 | Study_24 | Site 888 | 1.150 | 13 | 8 | 4 | 3 |
-| 2 | Study_24, Study_8 | Site 425 | 1.100 | 1 | 1 | 0 | 1 |
-| 3 | Study_2 | Site 30 | 1.100 | 1 | 1 | 0 | 1 |
-| 4 | Study_2 | Site 2 | 1.100 | 1 | 1 | 0 | 1 |
-| 5 | Study_21 | Site 921 | 1.100 | 6 | 5 | 0 | 2 |
-| 6 | Study_21 | Site 1555 | 1.100 | 2 | 2 | 0 | 1 |
-| 7 | Study_21 | Site 1640 | 1.100 | 9 | 6 | 3 | 2 |
-| 8 | Study_21 | Site 162 | 1.100 | 6 | 5 | 0 | 2 |
-| 9 | Study_23 | Site 3 | 1.100 | 4 | 4 | 0 | 1 |
-| 10 | Study_22 | Site 1752 | 1.100 | 1 | 1 | 0 | 1 |
+| Rank | Study | Site ID | Country | Score | Anomalies | Critical | High | Types |
+|------|-------|---------|---------|-------|-----------|----------|------|-------|
+| 1 | Study_21 | Site 522 | - | 1.200 | 2 | 2 | 0 | 2 |
+| 2 | Study_24, Study_8 | Site 425 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 3 | Study_21 | Site 944 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 4 | Study_21 | Site 943 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 5 | Study_21 | Site 941 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 6 | Study_21 | Site 94 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 7 | Study_21 | Site 938 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 8 | Study_21 | Site 936 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 9 | Study_21 | Site 929 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 10 | Study_21 | Site 805 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 11 | Study_21 | Site 914 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 12 | Study_21 | Site 91 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 13 | Study_21 | Site 908 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 14 | Study_21 | Site 907 | - | 1.100 | 1 | 1 | 0 | 1 |
+| 15 | Study_21 | Site 903 | - | 1.100 | 1 | 1 | 0 | 1 |
 
 
 ---
@@ -47,226 +62,274 @@
 ## Critical Anomalies (Immediate Action Required)
 
 
-### 1. Study_1 - Site 12 (KOR)
+### 1. Study_1 - Site 27 (CHN)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 6.7 standard deviations above the mean (0.445 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 7.4σ above average (37 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 2. Study_1 - Site 17 (ESP)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 7.8 standard deviations above the mean (0.509 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 3. Study_1 - Site 27 (CHN)
+### 2. Study_21 - Site 1110 (USA)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 5.0 standard deviations above the mean (0.340 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 7.2σ above average (36 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 4. Study_1 - Site 6 (AUT)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.2 standard deviations above the mean (0.295 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 5. Study_13 - Site 110 (AUS)
+### 3. Study_21 - Site 1370 (BGR)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.3 standard deviations above the mean (0.303 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 5.5σ above average (28 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 6. Study_16 - Site 618 (USA)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 5.1 standard deviations above the mean (0.346 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 7. Study_16 - Site 628 (CAN)
+### 4. Study_21 - Site 1389 (COL)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 5.2 standard deviations above the mean (0.355 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 7.4σ above average (37 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 8. Study_16 - Site 635 (GRC)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 5.8 standard deviations above the mean (0.389 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 9. Study_16 - Site 638 (BEL)
+### 5. Study_21 - Site 1436 (HUN)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.1 standard deviations above the mean (0.287 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 6.3σ above average (32 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 10. Study_16 - Site 646 (FRA)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.1 standard deviations above the mean (0.288 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 11. Study_16 - Site 659 (ITA)
+### 6. Study_21 - Site 1467 (LTU)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.5 standard deviations above the mean (0.311 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 6.1σ above average (31 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 12. Study_16 - Site 662 (ITA)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.1 standard deviations above the mean (0.292 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 13. Study_16 - Site 741 (CHN)
+### 7. Study_21 - Site 1510 (POL)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.5 standard deviations above the mean (0.312 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 6.8σ above average (34 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 14. Study_16 - Site 759 (TUR)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 5.8 standard deviations above the mean (0.388 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 15. Study_17 - Site 15 (CAN)
+### 8. Study_21 - Site 1513 (POL)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.3 standard deviations above the mean (0.300 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 5.7σ above average (29 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 16. Study_17 - Site 325 (USA)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.3 standard deviations above the mean (0.303 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 17. Study_17 - Site 466 (FRA)
+### 9. Study_21 - Site 1514 (POL)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.5 standard deviations above the mean (0.314 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 8.4σ above average (42 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 18. Study_19 - Site 155 (TWN)
-
-- **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.2 standard deviations above the mean (0.295 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
-
-### 19. Study_19 - Site 417 (KOR)
+### 10. Study_21 - Site 162 (PRT)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.3 standard deviations above the mean (0.302 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 7.6σ above average (38 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
 
-### 20. Study_19 - Site 467 (AUS)
+### 11. Study_21 - Site 172 (ARG)
 
 - **Type**: STATISTICAL_OUTLIER (Z-Score)
-- **Description**: avg_dqi_score is 4.3 standard deviations above the mean (0.298 vs mean 0.045)
-- **Recommendation**: Investigate why avg_dqi_score is unusually high at this site
+- **Description**: Sae Pending Count is 5.3σ above average (27 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 12. Study_21 - Site 175 (ARG)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 5.9σ above average (30 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 13. Study_21 - Site 22 (USA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 9.7σ above average (48 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 14. Study_21 - Site 356 (ARG)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 8.2σ above average (41 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 15. Study_21 - Site 520 (ESP)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 26.8σ above average (130 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 16. Study_21 - Site 911 (ARG)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 5.1σ above average (26 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 17. Study_21 - Site 916 (ARG)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 8.2σ above average (41 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 18. Study_21 - Site 921 (BRA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 6.5σ above average (33 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 19. Study_21 - Site 925 (BRA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 7.0σ above average (35 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 20. Study_21 - Site 930 (BRA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 5.5σ above average (28 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 21. Study_21 - Site 950 (BRA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 7.4σ above average (37 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 22. Study_21 - Site 991 (CHL)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 5.7σ above average (29 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 23. Study_22 - Site 2063 (USA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 7.2σ above average (36 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 24. Study_4 - Site 211 (USA)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Sae Pending Count is 10.9σ above average (54 vs mean 1.6)
+- **Recommendation**: Investigate elevated sae pending count at this site
+
+### 25. Study_16 - Site 625 (CAN)
+
+- **Type**: STATISTICAL_OUTLIER (Z-Score)
+- **Description**: Missing Visit Count is 6.9σ above average (10 vs mean 0.5)
+- **Recommendation**: Investigate elevated missing visit count at this site
 
 
 ---
 
 ## Regional Anomalies
 
-*No regional anomalies detected.*
+- **NOR** (EMEA): NOR has 25.6% high-risk subject rate (30/135 subjects)
+- **NZL** (ASIA): NZL has 29.7% high-risk subject rate (54/201 subjects)
+- **Multiple** (ASIA): ASIA region DQI (0.060) is 1.1σ above other regions
 
 
 ---
 
-## Cross-Study Anomalies
+## Cross-Study Anomalies (Repeat Offender Sites)
 
-- **Site 1018**: Site Site 1018 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 1027**: Site Site 1027 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1034**: Site Site 1034 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 1059**: Site Site 1059 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 110**: Site Site 110 is high risk in 3/6 studies: Study_13, Study_24, Study_4, Study_7, Study_8, Study_9
-- **Site 1179**: Site Site 1179 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1180**: Site Site 1180 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1181**: Site Site 1181 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1184**: Site Site 1184 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1336**: Site Site 1336 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1343**: Site Site 1343 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 1645**: Site Site 1645 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 1646**: Site Site 1646 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 1648**: Site Site 1648 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 1675**: Site Site 1675 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 17**: Site Site 17 is high risk in 2/4 studies: Study_1, Study_21, Study_22, Study_7
-- **Site 19**: Site Site 19 is high risk in 3/5 studies: Study_1, Study_17, Study_21, Study_22, Study_5
-- **Site 2013**: Site Site 2013 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 2015**: Site Site 2015 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 2030**: Site Site 2030 is high risk in 1/2 studies: Study_22, Study_24
-- **Site 2161**: Site Site 2161 is high risk in 1/2 studies: Study_23, Study_24
-- **Site 2184**: Site Site 2184 is high risk in 1/2 studies: Study_24, Study_25
-- **Site 2188**: Site Site 2188 is high risk in 1/2 studies: Study_24, Study_25
-- **Site 261**: Site Site 261 is high risk in 1/2 studies: Study_21, Study_5
-- **Site 267**: Site Site 267 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 27**: Site Site 27 is high risk in 1/2 studies: Study_1, Study_21
-- **Site 280**: Site Site 280 is high risk in 1/2 studies: Study_21, Study_5
-- **Site 281**: Site Site 281 is high risk in 2/3 studies: Study_21, Study_24, Study_5
-- **Site 282**: Site Site 282 is high risk in 1/2 studies: Study_21, Study_5
-- **Site 283**: Site Site 283 is high risk in 1/2 studies: Study_21, Study_5
-- **Site 292**: Site Site 292 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 308**: Site Site 308 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 309**: Site Site 309 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 313**: Site Site 313 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 327**: Site Site 327 is high risk in 3/5 studies: Study_17, Study_21, Study_24, Study_5, Study_8
-- **Site 328**: Site Site 328 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 329**: Site Site 329 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 336**: Site Site 336 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 338**: Site Site 338 is high risk in 2/2 studies: Study_24, Study_5
-- **Site 340**: Site Site 340 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 341**: Site Site 341 is high risk in 1/2 studies: Study_21, Study_5
-- **Site 343**: Site Site 343 is high risk in 1/2 studies: Study_22, Study_5
-- **Site 355**: Site Site 355 is high risk in 1/2 studies: Study_22, Study_7
-- **Site 425**: Site Site 425 is high risk in 2/2 studies: Study_24, Study_8
-- **Site 426**: Site Site 426 is high risk in 1/2 studies: Study_24, Study_8
-- **Site 462**: Site Site 462 is high risk in 1/2 studies: Study_10, Study_22
-- **Site 476**: Site Site 476 is high risk in 1/2 studies: Study_11, Study_22
-- **Site 482**: Site Site 482 is high risk in 1/2 studies: Study_11, Study_22
-- **Site 493**: Site Site 493 is high risk in 1/2 studies: Study_11, Study_19
-- **Site 507**: Site Site 507 is high risk in 2/4 studies: Study_11, Study_21, Study_24, Study_25
-- **Site 51**: Site Site 51 is high risk in 1/2 studies: Study_10, Study_24
-- **Site 597**: Site Site 597 is high risk in 2/3 studies: Study_13, Study_22, Study_24
-- **Site 778**: Site Site 778 is high risk in 1/2 studies: Study_19, Study_25
-- **Site 834**: Site Site 834 is high risk in 1/2 studies: Study_21, Study_22
-- **Site 880**: Site Site 880 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 883**: Site Site 883 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 884**: Site Site 884 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 887**: Site Site 887 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 888**: Site Site 888 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 904**: Site Site 904 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 953**: Site Site 953 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 986**: Site Site 986 is high risk in 1/2 studies: Study_21, Study_24
-- **Site 998**: Site Site 998 is high risk in 1/2 studies: Study_21, Study_22
+- **Site 1018** (USA): Site is high risk in 1/2 studies: Study_24
+- **Site 1027** (USA): Site is high risk in 1/2 studies: Study_22
+- **Site 1034** (USA): Site is high risk in 1/2 studies: Study_24
+- **Site 1059** (USA): Site is high risk in 1/2 studies: Study_21
+- **Site 110** (AUS): Site is high risk in 3/6 studies: Study_13, Study_24, Study_7
+- **Site 1179** (USA): Site is high risk in 1/2 studies: Study_21
+- **Site 1180** (USA): Site is high risk in 1/2 studies: Study_21
+- **Site 1181** (USA): Site is high risk in 1/2 studies: Study_21
+- **Site 1184** (USA): Site is high risk in 1/2 studies: Study_22
+- **Site 12** (KOR): Site is high risk in 2/5 studies: Study_1, Study_7
+- **Site 1336** (AUS): Site is high risk in 1/2 studies: Study_21
+- **Site 1343** (AUS): Site is high risk in 1/2 studies: Study_22
+- **Site 14** (ESP): Site is high risk in 4/10 studies: Study_17, Study_5, Study_6, Study_7
+- **Site 1645** (IND): Site is high risk in 1/2 studies: Study_24
+- **Site 1646** (IND): Site is high risk in 1/2 studies: Study_24
+- **Site 1648** (IND): Site is high risk in 1/2 studies: Study_24
+- **Site 1675** (MYS): Site is high risk in 1/2 studies: Study_24
+- **Site 17** (ESP): Site is high risk in 2/4 studies: Study_1, Study_7
+- **Site 19** (USA): Site is high risk in 3/5 studies: Study_1, Study_17, Study_5
+- **Site 2013** (USA): Site is high risk in 1/2 studies: Study_24
+- **Site 2015** (USA): Site is high risk in 1/2 studies: Study_24
+- **Site 2030** (USA): Site is high risk in 1/2 studies: Study_24
+- **Site 2161** (IND): Site is high risk in 1/2 studies: Study_24
+- **Site 2184** (CHN): Site is high risk in 1/2 studies: Study_24
+- **Site 2188** (ISR): Site is high risk in 1/2 studies: Study_24
+- **Site 259** (IND): Site is high risk in 2/5 studies: Study_24, Study_5
+- **Site 261** (IND): Site is high risk in 1/2 studies: Study_5
+- **Site 267** (IND): Site is high risk in 1/2 studies: Study_5
+- **Site 27** (CHN): Site is high risk in 1/2 studies: Study_1
+- **Site 280** (ESP): Site is high risk in 1/2 studies: Study_5
+- **Site 281** (ESP): Site is high risk in 2/3 studies: Study_24, Study_5
+- **Site 282** (ESP): Site is high risk in 1/2 studies: Study_5
+- **Site 283** (ESP): Site is high risk in 1/2 studies: Study_5
+- **Site 292** (ROU): Site is high risk in 1/2 studies: Study_5
+- **Site 308** (SVK): Site is high risk in 1/2 studies: Study_5
+- **Site 309** (SVK): Site is high risk in 1/2 studies: Study_5
+- **Site 313** (SVK): Site is high risk in 1/2 studies: Study_5
+- **Site 326** (USA): Site is high risk in 2/5 studies: Study_24, Study_5
+- **Site 327** (USA): Site is high risk in 3/5 studies: Study_17, Study_24, Study_5
+- **Site 328** (USA): Site is high risk in 1/2 studies: Study_5
+- **Site 329** (USA): Site is high risk in 1/2 studies: Study_5
+- **Site 336** (USA): Site is high risk in 1/2 studies: Study_5
+- **Site 338** (USA): Site is high risk in 2/2 studies: Study_24, Study_5
+- **Site 340** (USA): Site is high risk in 1/2 studies: Study_5
+- **Site 341** (USA): Site is high risk in 1/2 studies: Study_21
+- **Site 343** (USA): Site is high risk in 1/2 studies: Study_5
+- **Site 355** (POL): Site is high risk in 1/2 studies: Study_22
+- **Site 425** (CHN): Site is high risk in 2/2 studies: Study_24, Study_8
+- **Site 426** (CHN): Site is high risk in 1/2 studies: Study_24
+- **Site 462** (JPN): Site is high risk in 1/2 studies: Study_10
+- **Site 476** (DNK): Site is high risk in 1/2 studies: Study_11
+- **Site 482** (FRA): Site is high risk in 1/2 studies: Study_11
+- **Site 493** (DEU): Site is high risk in 1/2 studies: Study_19
+- **Site 50** (CAN): Site is high risk in 2/5 studies: Study_10, Study_24
+- **Site 507** (ITA): Site is high risk in 2/4 studies: Study_11, Study_24
+- **Site 51** (CAN): Site is high risk in 1/2 studies: Study_24
+- **Site 597** (USA): Site is high risk in 2/3 studies: Study_13, Study_24
+- **Site 6** (AUT): Site is high risk in 2/5 studies: Study_1, Study_24
+- **Site 778** (ISR): Site is high risk in 1/2 studies: Study_19
+- **Site 834** (ITA): Site is high risk in 1/2 studies: Study_21
+- **Site 87** (CZE): Site is high risk in 4/10 studies: Study_10, Study_13, Study_20, Study_7
+- **Site 880** (ESP): Site is high risk in 1/2 studies: Study_24
+- **Site 883** (ESP): Site is high risk in 1/2 studies: Study_24
+- **Site 884** (ESP): Site is high risk in 1/2 studies: Study_24
+- **Site 887** (ESP): Site is high risk in 1/2 studies: Study_24
+- **Site 888** (ESP): Site is high risk in 1/2 studies: Study_24
+- **Site 904** (ESP): Site is high risk in 1/2 studies: Study_24
+- **Site 953** (CAN): Site is high risk in 1/2 studies: Study_24
+- **Site 986** (CHL): Site is high risk in 1/2 studies: Study_24
+- **Site 998** (NOR): Site is high risk in 1/2 studies: Study_21
 
 
 ---
 
 ## Recommendations Summary
 
-Based on the anomaly analysis, the following actions are recommended:
+Based on the anomaly analysis, key actions:
 
-1. Investigate why lab_issues_count_sum is unusually high at this site
-2. Focus intervention on missing_visits - appears to be primary problem
-3. Focus intervention on missing_pages - appears to be primary problem
-4. Investigate why uncoded_whodd_count_sum is unusually high at this site
-5. High issue concentration - prioritize for immediate intervention
-6. Review site for unusual missing_pages_count_sum pattern
-7. Investigate why inactivated_forms_count_sum is unusually high at this site
-8. Review site for unusual uncoded_whodd_count_sum pattern
-9. Review site for unusual inactivated_forms_count_sum pattern
-10. Review site for unusual subjects_with_issues pattern
-11. Single site driving majority of Study_14 issues - immediate site review needed
-12. Focus intervention on sae - appears to be primary problem
-13. Investigate why missing_visit_count_sum is unusually high at this site
-14. Review site for unusual subject_count pattern
-15. Cross-functional review needed - site shows consistent quality issues across programs
+
+### CRITICAL Priority
+
+- Investigate elevated edrr open issues at this site
+- Investigate elevated sae pending count at this site
+- Investigate elevated lab issues count at this site
+- Investigate elevated missing visit count at this site
+- Investigate elevated max days page missing at this site
+
+### HIGH Priority
+
+- Site-wide quality intervention needed - majority of subjects have issues
+- Critical - single site driving majority of Study_15 data quality issues
+- Investigate elevated max days page missing at this site
+- Investigate elevated max days outstanding at this site
+- Investigate elevated subject count at this site
+
+### MEDIUM Priority
+
+- Check if SAE adverse event terms are being routed to coding team
+- Investigate elevated edrr open issues at this site
+- Focus intervention specifically on lab issues - appears to be root cause
+- Verify all data sources are being captured for this site
+- Investigate elevated sae pending count at this site
 
 
 ---
 
-*Report generated by JAVELIN.AI Anomaly Detection Engine*
+*Report generated by JAVELIN.AI Anomaly Detection Engine v2.0*
