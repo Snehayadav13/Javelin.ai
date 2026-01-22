@@ -1,0 +1,7 @@
+study,site_id,country,region,overall_priority,overall_risk_score,safety_risk,dq_risk,performance_risk,top_action,coordinator_synthesis,estimated_impact
+Study_24,Site 888,DEU,EMEA,HIGH,0.9,HIGH,CRITICAL,CRITICAL,Route uncoded adverse events to medical coding team,"Executive Summary: The ongoing study at Site 888 has identified a high priority issue, with a significant safety concern due to the occurrence of 10 adverse events that require MedDRA coding. Additionally, there is a critical Data Quality (DQ) issue as 10 visits have not been completed, increasing the risk of protocol deviations.
+
+Primary Concern: The immediate priority should be to address the safety concerns and complete all outstanding visits to mitigate",Significant - Timeline or data quality at risk
+Study_1,Site 17,ESP,EMEA,HIGH,0.9,HIGH,CRITICAL,CRITICAL,URGENT: Expedite SAE review - regulatory timeline at risk,"Executive Summary: Site 17 operations currently face critical issues, with a high priority on safety as eight SAE reviews are awaiting regulatory submission. The primary concern is the data quality issue where data has been outstanding for over 157 days due to a stale query problem, causing performance issues.
+
+Top Action: Immediately address the data quality and stale query problems to ensure regulatory compliance, maintain safety standards, and restore optimal site performance.",Significant - Timeline or data quality at risk

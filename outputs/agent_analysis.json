@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-01-22T11:59:30.226949",
+  "model": "mistral",
+  "llm_available": true,
+  "sites_analyzed": 2,
+  "priority_summary": {
+    "critical": 0,
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "recommendations": [
+    {
+      "study": "Study_24",
+      "site_id": "Site 888",
+      "country": "DEU",
+      "overall_priority": "HIGH",
+      "risk_score": 0.9,
+      "safety": {
+        "agent_name": "SafetyAgent",
+        "agent_role": "Patient Safety & Pharmacovigilance",
+        "risk_assessment": "HIGH",
+        "key_findings": [
+          "10 adverse event terms require MedDRA coding"
+        ],
+        "recommendations": [
+          "Route uncoded adverse events to medical coding team"
+        ],
+        "confidence": 0.85,
+        "reasoning": "Based on the current data, there are more high-risk subjects at Site 888 (DEU) and a higher number of uncoded MedDRA cases compared to other sites. This indicates an elevated safety risk. However, as no Safety Accounting Events (SAEs) or safety anomalies have been reported yet, the risk level can be classified as MEDIUM at this stage, with close monitoring advised for potential escalation.\n\nRisk Level: MEDIUM"
+      },
+      "dq": {
+        "agent_name": "DataQualityAgent",
+        "agent_role": "Data Quality & Completeness",
+        "risk_assessment": "CRITICAL",
+        "key_findings": [
+          "10 visits not completed - protocol deviation risk",
+          "160 CRF pages missing - data completeness issue",
+          "Data outstanding for 897+ days - stale query issue",
+          "Single issue type dominates - systemic problem identified"
+        ],
+        "recommendations": [
+          "Escalate stale queries to site management - unresolved for 60+ days",
+          "Schedule site call to address missed visits and document reasons",
+          "Issue batch query for missing CRF pages"
+        ],
+        "confidence": 0.85,
+        "reasoning": "The data quality for Site 888 (DEU) presents a significant concern, as there is a high number of missing visits and pages, along with a substantial amount of lab issues. This could lead to incomplete or inaccurate data sets. Additionally, the low DQI score indicates poor overall data quality. Risk Level: CRITICAL.\n\nAction is needed immediately to address these issues and improve the data quality to ensure reliable analysis and decision-making processes."
+      },
+      "performance": {
+        "agent_name": "PerformanceAgent",
+        "agent_role": "Site Performance & Operations",
+        "risk_assessment": "CRITICAL",
+        "key_findings": [
+          "Site DQI (0.316) is 7.1x portfolio average - significant underperformance",
+          "65% high-risk subjects - well above typical rate"
+        ],
+        "recommendations": [
+          "Consider site capability assessment and targeted training"
+        ],
+        "confidence": 0.85,
+        "reasoning": "The operational performance of Site 888 (DEU) exhibits a significant deviation from the portfolio average, as indicated by a DQI score of 0.316, which is 7.1 times higher than the portfolio average. This indicates a high risk level, with approximately two-thirds of subjects being classified as high-risk. Cross-study anomalies have also been identified, adding to the critical nature of this assessment. Risk Level: CRITICAL"
+      },
+      "synthesis": "Executive Summary: The ongoing study at Site 888 has identified a high priority issue, with a significant safety concern due to the occurrence of 10 adverse events that require MedDRA coding. Additionally, there is a critical Data Quality (DQ) issue as 10 visits have not been completed, increasing the risk of protocol deviations.\n\nPrimary Concern: The immediate priority should be to address the safety concerns and complete all outstanding visits to mitigate",
+      "actions": [
+        "Route uncoded adverse events to medical coding team",
+        "Escalate stale queries to site management - unresolved for 60+ days",
+        "Schedule site call to address missed visits and document reasons",
+        "Issue batch query for missing CRF pages",
+        "Consider site capability assessment and targeted training"
+      ],
+      "impact": "Significant - Timeline or data quality at risk"
+    },
+    {
+      "study": "Study_1",
+      "site_id": "Site 17",
+      "country": "ESP",
+      "overall_priority": "HIGH",
+      "risk_score": 0.9,
+      "safety": {
+        "agent_name": "SafetyAgent",
+        "agent_role": "Patient Safety & Pharmacovigilance",
+        "risk_assessment": "HIGH",
+        "key_findings": [
+          "8 SAE reviews pending regulatory submission",
+          "4 adverse event terms require MedDRA coding"
+        ],
+        "recommendations": [
+          "URGENT: Expedite SAE review - regulatory timeline at risk",
+          "Route uncoded adverse events to medical coding team"
+        ],
+        "confidence": 0.85,
+        "reasoning": "Based on the data provided, there is a moderate safety concern as indicated by the presence of pending serious adverse events (SAEs) and high-risk subjects. However, the absence of safety anomalies suggests that the overall risk might be lower than expected.\n\nRisk Level: MEDIUM"
+      },
+      "dq": {
+        "agent_name": "DataQualityAgent",
+        "agent_role": "Data Quality & Completeness",
+        "risk_assessment": "CRITICAL",
+        "key_findings": [
+          "Data outstanding for 157+ days - stale query issue",
+          "Single issue type dominates - systemic problem identified"
+        ],
+        "recommendations": [
+          "Escalate stale queries to site management - unresolved for 60+ days"
+        ],
+        "confidence": 0.85,
+        "reasoning": "The data quality at Site 17 (ESP) exhibits significant concerns due to a high number of missing visits and pages, as well as ongoing lab and EDRR issues. These factors contribute to a high DQI score of 0.509, indicating a high risk level for data quality.\n\nRisk Level: CRITICAL"
+      },
+      "performance": {
+        "agent_name": "PerformanceAgent",
+        "agent_role": "Site Performance & Operations",
+        "risk_assessment": "CRITICAL",
+        "key_findings": [
+          "Site DQI (0.509) is 11.4x portfolio average - significant underperformance",
+          "67% high-risk subjects - well above typical rate"
+        ],
+        "recommendations": [
+          "Consider site capability assessment and targeted training"
+        ],
+        "confidence": 0.85,
+        "reasoning": "Based on the Data Quality Index (DQI) of 0.509, which is significantly higher than the portfolio average, and a high percentage of high-risk subjects, it indicates that there is an elevated operational performance risk for Site 17 (ESP). This suggests potential issues with data quality that could impact analysis accuracy. Risk Level: CRITICAL"
+      },
+      "synthesis": "Executive Summary: Site 17 operations currently face critical issues, with a high priority on safety as eight SAE reviews are awaiting regulatory submission. The primary concern is the data quality issue where data has been outstanding for over 157 days due to a stale query problem, causing performance issues.\n\nTop Action: Immediately address the data quality and stale query problems to ensure regulatory compliance, maintain safety standards, and restore optimal site performance.",
+      "actions": [
+        "URGENT: Expedite SAE review - regulatory timeline at risk",
+        "Route uncoded adverse events to medical coding team",
+        "Escalate stale queries to site management - unresolved for 60+ days",
+        "Consider site capability assessment and targeted training"
+      ],
+      "impact": "Significant - Timeline or data quality at risk"
+    }
+  ]
+}
