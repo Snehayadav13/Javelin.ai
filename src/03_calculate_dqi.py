@@ -164,11 +164,17 @@ def calculate_component_score(series, weight):
     binary = (series > 0).astype(float)
 
     # Calculate reference max for severity scaling
-    # Use 95th percentile of NON-ZERO values to avoid zero division
+    # Issue 11 Fix: Require minimum 20 samples for stable p95, otherwise use max
     non_zero_values = series[series > 0]
-    if len(non_zero_values) > 0:
+    MIN_SAMPLES_FOR_PERCENTILE = 20
+
+    if len(non_zero_values) >= MIN_SAMPLES_FOR_PERCENTILE:
+        # Enough samples for stable percentile calculation
         p95 = non_zero_values.quantile(0.95)
         reference_max = p95 if p95 > 0 else non_zero_values.max()
+    elif len(non_zero_values) > 0:
+        # Small sample: use max instead of percentile
+        reference_max = non_zero_values.max()
     else:
         reference_max = 1.0  # Fallback
 
