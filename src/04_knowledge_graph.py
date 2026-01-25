@@ -680,7 +680,7 @@ Outputs:
 1. Visualize: Open knowledge_graph.graphml in Gephi or yEd
 2. Import to Neo4j: Use nodes.csv and edges.csv
 3. Query: Use the ClinicalTrialKnowledgeGraph class for programmatic access
-4. Next script: python src/05_generate_insights.py (or build dashboard)
+4. Next script: python src/05_recommendations_engine.py
 """)
 
     return True
