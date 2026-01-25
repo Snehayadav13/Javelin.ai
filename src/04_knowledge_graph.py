@@ -55,6 +55,9 @@ DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = PROJECT_ROOT / "outputs"
 SUBJECT_PATH = OUTPUT_DIR / "master_subject_with_dqi.csv"
 SITE_PATH = OUTPUT_DIR / "master_site_with_dqi.csv"
+STUDY_PATH = OUTPUT_DIR / "master_study_with_dqi.csv"
+REGION_PATH = OUTPUT_DIR / "master_region_with_dqi.csv"
+COUNTRY_PATH = OUTPUT_DIR / "master_country_with_dqi.csv"
 
 
 # ============================================================================
@@ -91,73 +94,139 @@ class ClinicalTrialKnowledgeGraph:
         )
         self.edge_counts[edge_type] += 1
 
-    def build_from_data(self, subject_df, site_df):
+    def build_from_data(self, subject_df, site_df, study_df=None, region_df=None, country_df=None):
         """
-        Build the knowledge graph from subject and site dataframes.
+        Build the knowledge graph from subject, site, and optionally
+        pre-computed study/region/country dataframes.
+
+        Args:
+            subject_df: Subject-level data with DQI scores
+            site_df: Site-level aggregated data
+            study_df: Pre-computed study-level data (optional, computed if None)
+            region_df: Pre-computed region-level data (optional, computed if None)
+            country_df: Pre-computed country-level data (optional, computed if None)
         """
         print("\nBuilding knowledge graph...")
 
         # =====================================================================
-        # Step 1: Add Region nodes
+        # Step 1: Add Region nodes (use pre-computed if available)
         # =====================================================================
         print("  Adding Region nodes...")
-        regions = subject_df['region'].unique()
-        for region in regions:
-            self.add_node(
-                f"region:{region}",
-                node_type="Region",
-                name=region
-            )
+        if region_df is not None:
+            for _, row in region_df.iterrows():
+                self.add_node(
+                    f"region:{row['region']}",
+                    node_type="Region",
+                    name=row['region'],
+                    site_count=int(row['site_count']),
+                    subject_count=int(row['subject_count']),
+                    study_count=int(row['study_count']),
+                    country_count=int(row['country_count']),
+                    avg_dqi_score=round(float(row['avg_dqi_score']), 4),
+                    max_dqi_score=round(float(row['max_dqi_score']), 4),
+                    high_risk_subjects=int(row['high_risk_subjects']),
+                    high_risk_rate=round(float(row['high_risk_rate']), 4),
+                    region_risk_category=row['region_risk_category']
+                )
+        else:
+            # Fallback: compute from subject_df
+            regions = subject_df['region'].unique()
+            for region in regions:
+                self.add_node(
+                    f"region:{region}",
+                    node_type="Region",
+                    name=region
+                )
 
         # =====================================================================
         # Step 2: Add Country nodes and Region relationships
         # =====================================================================
         print("  Adding Country nodes...")
-        country_region = subject_df[['country', 'region']].drop_duplicates()
-        for _, row in country_region.iterrows():
-            country_id = f"country:{row['country']}"
-            self.add_node(
-                country_id,
-                node_type="Country",
-                name=row['country'],
-                region=row['region']
-            )
-            # Country -> Region relationship
-            self.add_edge(
-                country_id,
-                f"region:{row['region']}",
-                edge_type="IN_REGION"
-            )
+        if country_df is not None:
+            for _, row in country_df.iterrows():
+                country_id = f"country:{row['country']}"
+                self.add_node(
+                    country_id,
+                    node_type="Country",
+                    name=row['country'],
+                    region=row['region'],
+                    site_count=int(row['site_count']),
+                    subject_count=int(row['subject_count']),
+                    study_count=int(row['study_count']),
+                    avg_dqi_score=round(float(row['avg_dqi_score']), 4),
+                    max_dqi_score=round(float(row['max_dqi_score']), 4),
+                    high_risk_subjects=int(row['high_risk_subjects']),
+                    high_risk_rate=round(float(row['high_risk_rate']), 4),
+                    country_risk_category=row['country_risk_category']
+                )
+                # Country -> Region relationship
+                self.add_edge(
+                    country_id,
+                    f"region:{row['region']}",
+                    edge_type="IN_REGION"
+                )
+        else:
+            # Fallback: compute from subject_df
+            country_region = subject_df[['country', 'region']].drop_duplicates()
+            for _, row in country_region.iterrows():
+                country_id = f"country:{row['country']}"
+                self.add_node(
+                    country_id,
+                    node_type="Country",
+                    name=row['country'],
+                    region=row['region']
+                )
+                self.add_edge(
+                    country_id,
+                    f"region:{row['region']}",
+                    edge_type="IN_REGION"
+                )
 
         # =====================================================================
         # Step 3: Add Study nodes with aggregated metrics
         # =====================================================================
         print("  Adding Study nodes...")
-        study_metrics = subject_df.groupby('study').agg({
-            'subject_id':'count',
-            'dqi_score':['mean', 'max'],
-            'risk_category':lambda x:(x=='High').sum(),
-            'has_issues':'sum'
-        }).reset_index()
-        study_metrics.columns = ['study', 'subject_count', 'avg_dqi', 'max_dqi',
-                                 'high_risk_count', 'subjects_with_issues']
+        if study_df is not None:
+            for _, row in study_df.iterrows():
+                self.add_node(
+                    f"study:{row['study']}",
+                    node_type="Study",
+                    name=row['study'],
+                    subject_count=int(row['subject_count']),
+                    site_count=int(row['site_count']),
+                    avg_dqi_score=round(float(row['avg_dqi_score']), 4),
+                    max_site_dqi_score=round(float(row['max_site_dqi_score']), 4),
+                    high_risk_subjects=int(row['high_risk_subjects']),
+                    high_risk_rate=round(float(row['high_risk_rate']), 4),
+                    high_risk_sites=int(row['high_risk_sites']),
+                    subjects_with_issues=int(row['subjects_with_issues']),
+                    study_risk_category=row['study_risk_category']
+                )
+        else:
+            # Fallback: compute from subject_df
+            study_metrics = subject_df.groupby('study').agg({
+                'subject_id':'count',
+                'dqi_score':['mean', 'max'],
+                'risk_category':lambda x:(x=='High').sum(),
+                'has_issues':'sum'
+            }).reset_index()
+            study_metrics.columns = ['study', 'subject_count', 'avg_dqi', 'max_dqi',
+                                     'high_risk_count', 'subjects_with_issues']
+            site_counts = site_df.groupby('study').size().reset_index(name='site_count')
+            study_metrics = study_metrics.merge(site_counts, on='study', how='left')
 
-        # Get site counts per study
-        site_counts = site_df.groupby('study').size().reset_index(name='site_count')
-        study_metrics = study_metrics.merge(site_counts, on='study', how='left')
-
-        for _, row in study_metrics.iterrows():
-            self.add_node(
-                f"study:{row['study']}",
-                node_type="Study",
-                name=row['study'],
-                subject_count=int(row['subject_count']),
-                site_count=int(row['site_count']),
-                avg_dqi_score=round(float(row['avg_dqi']), 4),
-                max_dqi_score=round(float(row['max_dqi']), 4),
-                high_risk_count=int(row['high_risk_count']),
-                subjects_with_issues=int(row['subjects_with_issues'])
-            )
+            for _, row in study_metrics.iterrows():
+                self.add_node(
+                    f"study:{row['study']}",
+                    node_type="Study",
+                    name=row['study'],
+                    subject_count=int(row['subject_count']),
+                    site_count=int(row['site_count']),
+                    avg_dqi_score=round(float(row['avg_dqi']), 4),
+                    max_dqi_score=round(float(row['max_dqi']), 4),
+                    high_risk_count=int(row['high_risk_count']),
+                    subjects_with_issues=int(row['subjects_with_issues'])
+                )
 
         # =====================================================================
         # Step 4: Add Site nodes with relationships
@@ -237,16 +306,23 @@ class ClinicalTrialKnowledgeGraph:
         # =====================================================================
         # Calculate statistics
         # =====================================================================
+        # Count from the actual data passed in or computed
+        num_studies = len(study_df) if study_df is not None else subject_df['study'].nunique()
+        num_sites = len(site_df)
+        num_subjects = len(subject_df)
+        num_countries = len(country_df) if country_df is not None else subject_df['country'].nunique()
+        num_regions = len(region_df) if region_df is not None else subject_df['region'].nunique()
+
         self.statistics = {
             'total_nodes':self.graph.number_of_nodes(),
             'total_edges':self.graph.number_of_edges(),
             'node_counts':dict(self.node_counts),
             'edge_counts':dict(self.edge_counts),
-            'studies':len(study_metrics),
-            'sites':len(site_df),
-            'subjects':len(subject_df),
-            'countries':len(country_region),
-            'regions':len(regions)
+            'studies':num_studies,
+            'sites':num_sites,
+            'subjects':num_subjects,
+            'countries':num_countries,
+            'regions':num_regions
         }
 
         print(f"  Total nodes: {self.statistics['total_nodes']:,}")
@@ -377,9 +453,27 @@ def build_knowledge_graph():
     subject_df = pd.read_csv(SUBJECT_PATH)
     site_df = pd.read_csv(SITE_PATH)
 
+    # Load pre-computed aggregated data (optional - has fallback)
+    study_df = None
+    region_df = None
+    country_df = None
+
+    if STUDY_PATH.exists():
+        study_df = pd.read_csv(STUDY_PATH)
+        print(f"  Studies: {len(study_df)} (from pre-computed file)")
+    else:
+        print(f"  Studies: {subject_df['study'].nunique()} (will compute)")
+
+    if REGION_PATH.exists():
+        region_df = pd.read_csv(REGION_PATH)
+        print(f"  Regions: {len(region_df)} (from pre-computed file)")
+
+    if COUNTRY_PATH.exists():
+        country_df = pd.read_csv(COUNTRY_PATH)
+        print(f"  Countries: {len(country_df)} (from pre-computed file)")
+
     print(f"  Subjects: {len(subject_df):,}")
     print(f"  Sites: {len(site_df):,}")
-    print(f"  Studies: {subject_df['study'].nunique()}")
 
     # -------------------------------------------------------------------------
     # Build Knowledge Graph
@@ -389,7 +483,7 @@ def build_knowledge_graph():
     print("=" * 70)
 
     kg = ClinicalTrialKnowledgeGraph()
-    kg.build_from_data(subject_df, site_df)
+    kg.build_from_data(subject_df, site_df, study_df, region_df, country_df)
 
     # -------------------------------------------------------------------------
     # Graph Statistics
@@ -415,22 +509,37 @@ def build_knowledge_graph():
 
     # Query 1: High-risk subject count by study
     print("\nHigh-risk subjects by study:")
-    study_risk = subject_df.groupby('study')['risk_category'].apply(
-        lambda x:(x=='High').sum()
-    ).sort_values(ascending=False).head(5)
-    for study, count in study_risk.items():
-        print(f"  {study}: {count:,} high-risk subjects")
+    if study_df is not None:
+        top_studies = study_df.nlargest(5, 'high_risk_subjects')[['study', 'high_risk_subjects', 'study_risk_category']]
+        for _, row in top_studies.iterrows():
+            print(f"  {row['study']}: {int(row['high_risk_subjects']):,} high-risk subjects [{row['study_risk_category']}]")
+    else:
+        study_risk = subject_df.groupby('study')['risk_category'].apply(
+            lambda x:(x=='High').sum()
+        ).sort_values(ascending=False).head(5)
+        for study, count in study_risk.items():
+            print(f"  {study}: {count:,} high-risk subjects")
 
     # Query 2: Top countries by average DQI
     print("\nTop 5 countries by average DQI score:")
-    country_dqi = subject_df.groupby('country')['dqi_score'].mean().sort_values(ascending=False).head(5)
-    for country, dqi in country_dqi.items():
-        print(f"  {country}: {dqi:.4f}")
+    if country_df is not None:
+        top_countries = country_df.nlargest(5, 'avg_dqi_score')[['country', 'region', 'avg_dqi_score', 'country_risk_category']]
+        for _, row in top_countries.iterrows():
+            print(f"  {row['country']} ({row['region']}): {row['avg_dqi_score']:.4f} [{row['country_risk_category']}]")
+    else:
+        country_dqi = subject_df.groupby('country')['dqi_score'].mean().sort_values(ascending=False).head(5)
+        for country, dqi in country_dqi.items():
+            print(f"  {country}: {dqi:.4f}")
 
     # Query 3: Risk distribution by region
-    print("\nRisk distribution by region:")
-    region_risk = subject_df.groupby(['region', 'risk_category']).size().unstack(fill_value=0)
-    print(region_risk.to_string())
+    print("\nRisk summary by region:")
+    if region_df is not None:
+        for _, row in region_df.iterrows():
+            print(f"  {row['region']}: {int(row['site_count'])} sites, {int(row['subject_count']):,} subjects, "
+                  f"DQI={row['avg_dqi_score']:.4f}, High-risk rate={row['high_risk_rate']*100:.1f}% [{row['region_risk_category']}]")
+    else:
+        region_risk = subject_df.groupby(['region', 'risk_category']).size().unstack(fill_value=0)
+        print(region_risk.to_string())
 
     # -------------------------------------------------------------------------
     # Export Graph
@@ -490,17 +599,26 @@ def build_knowledge_graph():
 
         f.write("HIERARCHY\n")
         f.write("-" * 40 + "\n")
-        f.write("Region (3)\n")
-        f.write("  └── Country (71)\n")
-        f.write("        └── Site (3,399)\n")
-        f.write("              └── Subject (57,997)\n")
-        f.write("Study (23)\n")
-        f.write("  └── Site (3,399)\n")
-        f.write("        └── Subject (57,997)\n\n")
+        f.write(f"Region ({kg.node_counts.get('Region', 0)})\n")
+        f.write(f"  └── Country ({kg.node_counts.get('Country', 0)})\n")
+        f.write(f"        └── Site ({kg.node_counts.get('Site', 0):,})\n")
+        f.write(f"              └── Subject ({kg.node_counts.get('Subject', 0):,})\n")
+        f.write(f"Study ({kg.node_counts.get('Study', 0)})\n")
+        f.write(f"  └── Site ({kg.node_counts.get('Site', 0):,})\n")
+        f.write(f"        └── Subject ({kg.node_counts.get('Subject', 0):,})\n\n")
 
+        # Risk distribution - use pre-computed data if available
         f.write("RISK DISTRIBUTION BY REGION\n")
         f.write("-" * 40 + "\n")
-        f.write(region_risk.to_string())
+        if region_df is not None:
+            for _, row in region_df.iterrows():
+                f.write(f"{row['region']}: {int(row['high_risk_subjects']):,} high-risk / "
+                        f"{int(row['subject_count']):,} total "
+                        f"({row['high_risk_rate'] * 100:.1f}%) [{row['region_risk_category']}]\n")
+        else:
+            # Compute on the fly
+            region_risk = subject_df.groupby(['region', 'risk_category']).size().unstack(fill_value=0)
+            f.write(region_risk.to_string())
         f.write("\n\n")
 
         f.write("USE CASES\n")
