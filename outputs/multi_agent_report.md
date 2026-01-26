@@ -1,7 +1,6 @@
 # JAVELIN.AI - Multi-Agent Recommendation Report
 
-*Generated: 2026-01-26 03:46:18*
-*Analysis Mode: AI-Enhanced (LLM)*
+*Analysis Mode: AI (LLM - Mistral)*
 
 ---
 

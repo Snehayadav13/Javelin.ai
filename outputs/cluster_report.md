@@ -1,7 +1,5 @@
 # JAVELIN.AI - Site Clustering Report
 
-*Generated: 2026-01-26 03:47:04*
-
 ---
 
 ## Executive Summary

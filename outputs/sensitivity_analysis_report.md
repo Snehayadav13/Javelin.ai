@@ -1,7 +1,5 @@
 # JAVELIN.AI - DQI Sensitivity Analysis Report
 
-**Generated:** 2026-01-26 12:41
-
 **Subjects Analyzed:** 57,997
 
 **Scenarios Tested:** 18

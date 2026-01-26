@@ -1,7 +1,5 @@
 # JAVELIN.AI - Root Cause Analysis Report
 
-*Generated: 2026-01-26 03:47:56*
-
 ---
 
 ## Executive Summary

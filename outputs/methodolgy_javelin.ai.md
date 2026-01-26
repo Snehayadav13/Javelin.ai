@@ -1,7 +1,6 @@
 # JAVELIN.AI - Methodology & Regulatory Alignment
 
 **Version:** 1.0  
-**Date:** January 26, 2026  
 **Purpose:** Comprehensive documentation of JAVELIN.AI's alignment with regulatory guidance and industry standards
 
 ---
@@ -291,7 +290,7 @@ This supports ICH E6(R2) 5.0.5 (Risk Communication) by providing structured insi
 | Check | Result |
 |-------|--------|
 | SAE subjects in High risk | 100% (4,531/4,531) |
-| Risk pyramid shape maintained | ✅ Low > Medium > High |
+| Risk pyramid shape maintained | Low > Medium > High |
 | Sensitivity analysis stability | <1.55% shift under extreme conditions |
 
 ### 6.3 Insight Generation
@@ -308,12 +307,12 @@ This supports ICH E6(R2) 5.0.5 (Risk Communication) by providing structured insi
 
 JAVELIN.AI represents a comprehensive implementation of regulatory requirements for risk-based quality management in clinical trials:
 
-✅ **ICH E6(R2) Compliant:** Implements Section 5.0 Quality Management framework  
-✅ **FDA Aligned:** Follows 2013/2023 RBM guidance principles  
-✅ **EMA Compatible:** Supports QTL concepts from Reflection Paper  
-✅ **Industry Standard:** Aligns with TransCelerate RBQM framework  
-✅ **Literature Supported:** Methodology consistent with published evidence  
-✅ **Empirically Validated:** Processing 57,997 subjects across 23 studies  
+- **ICH E6(R2) Compliant:** Implements Section 5.0 Quality Management framework  
+- **FDA Aligned:** Follows 2013/2023 RBM guidance principles  
+- **EMA Compatible:** Supports QTL concepts from Reflection Paper  
+- **Industry Standard:** Aligns with TransCelerate RBQM framework  
+- **Literature Supported:** Methodology consistent with published evidence  
+- **Empirically Validated:** Processing 57,997 subjects across 23 studies  
 
 The platform transforms regulatory requirements into operational reality, enabling sponsors to meet their oversight obligations while improving efficiency and effectiveness.
 
