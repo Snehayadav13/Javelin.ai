@@ -59,6 +59,12 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+import sys
+import io
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 # ============================================================================
 # PATH SETUP
 # ============================================================================
@@ -1264,7 +1270,7 @@ if __name__=="__main__":
 
     success = run_root_cause_analysis(
         include_clusters=not args.no_clusters,
-        top_issues=args.top_issues
+        top_issues=args.top_sites
     )
 
     if not success:

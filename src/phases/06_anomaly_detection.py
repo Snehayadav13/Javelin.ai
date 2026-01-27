@@ -1141,6 +1141,10 @@ def run_anomaly_detection():
     print(f"   {len(anomalies_df)} anomalies")
 
     # Save site scores
+    if 'anomaly_score' in score_df.columns and len(score_df) > 0:
+        score_df['is_anomaly'] = score_df['anomaly_score'] > 0
+    else:
+        score_df['is_anomaly'] = False
     scores_path = PHASE_06_DIR / "site_anomaly_scores.csv"
     score_df.to_csv(scores_path, index=False)
     print(f"\n[OK] Saved: {scores_path}")
