@@ -19,6 +19,9 @@ python src/run_pipeline.py --all --diagnostics
 # Include knowledge graph (Phase 04)
 python src/run_pipeline.py --all --include-kg
 
+# Skip phases that have already completed
+python src/run_pipeline.py --all --skip-completed
+
 FEATURES:
 ---------
 - Sequential execution with dependency checking
@@ -28,6 +31,7 @@ FEATURES:
 - Progress tracking with tqdm
 - Pre-flight validation checks
 - Summary report at completion
+- Skip completed phases (optional)
 
 GCP COMPLIANCE:
 ---------------
@@ -38,8 +42,8 @@ GCP COMPLIANCE:
 - Validation before execution
 
 Author: JAVELIN.AI Team
-Version: 1.1.0
-Last Updated: 2026-01-27
+Version: 1.2.0
+Last Updated: 2026-01-28
 """
 
 import sys
@@ -54,6 +58,7 @@ import platform
 
 try:
     from tqdm import tqdm
+
     HAS_TQDM = True
 except ImportError:
     HAS_TQDM = False
@@ -62,6 +67,7 @@ except ImportError:
 
 try:
     import psutil
+
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
@@ -79,6 +85,7 @@ except ImportError:
     print("ERROR: Could not import config.py")
     print("Make sure config.py exists in src/ directory")
     sys.exit(1)
+
 
 # ============================================================================
 # LOGGING SETUP
@@ -113,11 +120,11 @@ class PipelineLogger:
             f.write(log_line + "\n")
 
         if console:
-            if level == "ERROR":
+            if level=="ERROR":
                 print(f"ERROR: {message}")
-            elif level == "WARNING":
+            elif level=="WARNING":
                 print(f"WARNING: {message}")
-            elif level == "SUCCESS":
+            elif level=="SUCCESS":
                 print(f"SUCCESS: {message}")
             else:
                 print(message)
@@ -154,7 +161,7 @@ class PipelineLogger:
         end_time = datetime.now()
 
         self.log(f"Completed: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-        self.log(f"Total Duration: {total_duration:.1f}s ({total_duration/60:.1f}m)")
+        self.log(f"Total Duration: {total_duration:.1f}s ({total_duration / 60:.1f}m)")
         self.log(f"Phases Executed: {phases_run}")
 
         if success:
@@ -164,6 +171,7 @@ class PipelineLogger:
 
         self.log("=" * 80)
         self.log(f"\nLog saved to: {self.log_file}", console=True)
+
 
 # ============================================================================
 # PRE-FLIGHT CHECKS
@@ -176,23 +184,24 @@ def check_python_version(logger: PipelineLogger) -> bool:
 
     if version >= required:
         logger.log(f"Python version: {version.major}.{version.minor}.{version.micro} (OK)",
-                  console=False)
+                   console=False)
         return True
     else:
         logger.log(f"Python version: {version.major}.{version.minor}.{version.micro} "
-                  f"(requires >= {required[0]}.{required[1]})", level="ERROR")
+                   f"(requires >= {required[0]}.{required[1]})", level="ERROR")
         return False
+
 
 def check_required_packages(logger: PipelineLogger) -> bool:
     """Check required Python packages are installed."""
     required_packages = {
-        'pandas': 'pandas',
-        'numpy': 'numpy',
-        'openpyxl': 'openpyxl',
-        'networkx': 'networkx',
-        'scikit-learn': 'sklearn',
-        'matplotlib': 'matplotlib',
-        'seaborn': 'seaborn',
+        'pandas':'pandas',
+        'numpy':'numpy',
+        'openpyxl':'openpyxl',
+        'networkx':'networkx',
+        'scikit-learn':'sklearn',
+        'matplotlib':'matplotlib',
+        'seaborn':'seaborn',
     }
 
     missing = []
@@ -210,6 +219,7 @@ def check_required_packages(logger: PipelineLogger) -> bool:
         return False
 
     return True
+
 
 def check_data_folder(logger: PipelineLogger) -> bool:
     """Check data folder exists and contains files."""
@@ -231,11 +241,12 @@ def check_data_folder(logger: PipelineLogger) -> bool:
 
     return True
 
+
 def check_disk_space(logger: PipelineLogger, required_mb: int = 100) -> bool:
     """Check available disk space."""
     if not HAS_PSUTIL:
         logger.log("Disk space check skipped (psutil not installed)",
-                  level="WARNING", console=False)
+                   level="WARNING", console=False)
         return True
 
     try:
@@ -244,7 +255,7 @@ def check_disk_space(logger: PipelineLogger, required_mb: int = 100) -> bool:
 
         if free_mb < required_mb:
             logger.log(f"Insufficient disk space: {free_mb:.1f} MB free "
-                      f"(requires >= {required_mb} MB)", level="ERROR")
+                       f"(requires >= {required_mb} MB)", level="ERROR")
             return False
 
         logger.log(f"Disk space: {free_mb:.1f} MB free (OK)", console=False)
@@ -252,6 +263,7 @@ def check_disk_space(logger: PipelineLogger, required_mb: int = 100) -> bool:
     except Exception as e:
         logger.log(f"Disk space check failed: {e}", level="WARNING", console=False)
         return True
+
 
 def check_phase_dependencies(phase_num: str, logger: PipelineLogger) -> tuple:
     """Check if required output files from dependent phases exist."""
@@ -277,10 +289,46 @@ def check_phase_dependencies(phase_num: str, logger: PipelineLogger) -> tuple:
 
     if missing_outputs:
         logger.log(f"Phase {phase_num} depends on: {', '.join(missing_outputs)}",
-                  level="ERROR")
+                   level="ERROR")
         return False, missing_outputs
 
     return True, []
+
+
+def check_phase_completed(phase_num: str, logger: PipelineLogger) -> bool:
+    """Check if a phase has already completed by checking for output files."""
+    metadata = PHASE_METADATA[phase_num]
+    required_outputs = metadata['outputs']
+
+    if not required_outputs:
+        return False
+
+    from config import OUTPUT_FILES
+
+    CORE_OUTPUTS = {
+        '04':['knowledge_graph', 'knowledge_graph_nodes', 'knowledge_graph_summary'],
+        '05':['executive_summary', 'recommendations_report', 'recommendations_by_site'],
+        '08':['site_clusters', 'cluster_profiles', 'cluster_summary'],
+    }
+
+    if phase_num in CORE_OUTPUTS:
+        core_outputs = CORE_OUTPUTS[phase_num]
+        for output_key in core_outputs:
+            if output_key in OUTPUT_FILES:
+                output_file = OUTPUT_FILES[output_key]
+                if not output_file.exists():
+                    return False
+        return True
+
+    else:
+        all_exist = True
+        for output_key in required_outputs:
+            if output_key in OUTPUT_FILES:
+                output_file = OUTPUT_FILES[output_key]
+                if not output_file.exists():
+                    all_exist = False
+                    break
+        return all_exist
 
 def run_preflight_checks(logger: PipelineLogger) -> bool:
     """Run all pre-flight checks."""
@@ -309,6 +357,7 @@ def run_preflight_checks(logger: PipelineLogger) -> bool:
 
     return all_passed
 
+
 # ============================================================================
 # PHASE EXECUTION
 # ============================================================================
@@ -323,6 +372,9 @@ def build_phase_command(phase_num: str) -> list:
         for key, value in defaults.items():
             arg_name = f"--{key.replace('_', '-')}"
 
+            if value is None:
+                continue
+
             if isinstance(value, bool):
                 if value:
                     cmd.append(arg_name)
@@ -331,12 +383,20 @@ def build_phase_command(phase_num: str) -> list:
 
     return cmd
 
-def execute_phase(phase_num: str, logger: PipelineLogger) -> bool:
+
+def execute_phase(phase_num: str, logger: PipelineLogger, skip_completed: bool = False) -> bool:
     """Execute a single phase script."""
     metadata = PHASE_METADATA[phase_num]
     phase_name = metadata['name']
 
     logger.phase_start(phase_num, phase_name)
+
+    # Check if phase already completed (if flag enabled)
+    if skip_completed and check_phase_completed(phase_num, logger):
+        logger.log(f"Phase {phase_num} outputs already exist - SKIPPING", level="INFO")
+        print(f"\nPhase {phase_num}: {phase_name} - SKIPPED (outputs exist)")
+        return True
+
     print(f"\nRunning Phase {phase_num}: {phase_name}...")
 
     deps_ok, missing = check_phase_dependencies(phase_num, logger)
@@ -415,7 +475,7 @@ def execute_phase(phase_num: str, logger: PipelineLogger) -> bool:
         return False
 
 
-def execute_pipeline(phases: list, logger: PipelineLogger) -> tuple:
+def execute_pipeline(phases: list, logger: PipelineLogger, skip_completed: bool = False) -> tuple:
     """Execute multiple phases in sequence."""
     logger.section("PIPELINE EXECUTION")
 
@@ -432,22 +492,23 @@ def execute_pipeline(phases: list, logger: PipelineLogger) -> tuple:
         if HAS_TQDM:
             phase_iterator.set_description(f"Phase {phase_num}: {metadata['name']}")
 
-        success = execute_phase(phase_num, logger)
+        success = execute_phase(phase_num, logger, skip_completed=skip_completed)
         phases_run += 1
 
         if not success:
             logger.log(f"\nPipeline stopped due to Phase {phase_num} failure",
-                      level="ERROR", console=True)
+                       level="ERROR", console=True)
             logger.log("Troubleshooting:", console=True)
             logger.log(f"  1. Check log file for detailed error messages", console=True)
             logger.log(f"  2. Verify Phase {phase_num} dependencies are met", console=True)
             logger.log(f"  3. Run phase manually: python {get_phase_script_path(phase_num)}",
-                      console=True)
+                       console=True)
             logger.log(f"\nTo resume from Phase {phase_num}:", console=True)
             logger.log(f"  python src/run_pipeline.py --phase {phase_num}", console=True)
             return False, phases_run
 
     return True, phases_run
+
 
 # ============================================================================
 # MAIN PIPELINE ORCHESTRATION
@@ -485,6 +546,7 @@ def get_phases_to_run(args: argparse.Namespace) -> list:
         print("  python src/run_pipeline.py --phase 03")
         sys.exit(1)
 
+
 def main():
     """Main pipeline orchestrator."""
     parser = argparse.ArgumentParser(
@@ -495,6 +557,7 @@ Examples:
   python src/run_pipeline.py --all
   python src/run_pipeline.py --all --diagnostics
   python src/run_pipeline.py --all --include-kg
+  python src/run_pipeline.py --all --skip-completed
   python src/run_pipeline.py --phase 03
 
 Logs are saved to: outputs/logs/pipeline_run_YYYYMMDD_HHMMSS.log
@@ -502,13 +565,15 @@ Logs are saved to: outputs/logs/pipeline_run_YYYYMMDD_HHMMSS.log
     )
 
     parser.add_argument('--all', action='store_true',
-                       help='Run all mandatory phases (01-09, excluding 00 and 04)')
+                        help='Run all mandatory phases (01-09, excluding 00 and 04)')
     parser.add_argument('--phase', type=str,
-                       help='Run specific phase only (e.g., 03)')
+                        help='Run specific phase only (e.g., 03)')
     parser.add_argument('--diagnostics', action='store_true',
-                       help='Include Phase 00 (diagnostics) before running pipeline')
+                        help='Include Phase 00 (diagnostics) before running pipeline')
     parser.add_argument('--include-kg', action='store_true',
-                       help='Include Phase 04 (knowledge graph generation)')
+                        help='Include Phase 04 (knowledge graph generation)')
+    parser.add_argument('--skip-completed', action='store_true',
+                        help='Skip phases that have already generated outputs')
 
     args = parser.parse_args()
 
@@ -531,11 +596,13 @@ Logs are saved to: outputs/logs/pipeline_run_YYYYMMDD_HHMMSS.log
     print("=" * 80)
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"Log file: {log_file}")
+    if args.skip_completed:
+        print("Mode: Skip completed phases")
     print("=" * 80)
 
     if not run_preflight_checks(logger):
         logger.log("\nPre-flight checks failed. Aborting pipeline.",
-                  level="ERROR", console=True)
+                   level="ERROR", console=True)
         logger.finalize(False, 0, 0)
         sys.exit(1)
 
@@ -549,12 +616,12 @@ Logs are saved to: outputs/logs/pipeline_run_YYYYMMDD_HHMMSS.log
         metadata = PHASE_METADATA[phase_num]
         optional_mark = " (optional)" if metadata['optional'] else ""
         logger.log(f"  Phase {phase_num}: {metadata['name']}{optional_mark}",
-                  console=True)
+                   console=True)
 
     print(f"\nReady to execute {len(phases)} phase(s).")
 
     start_time = time.time()
-    success, phases_run = execute_pipeline(phases, logger)
+    success, phases_run = execute_pipeline(phases, logger, skip_completed=args.skip_completed)
     total_duration = time.time() - start_time
 
     logger.finalize(success, phases_run, total_duration)
@@ -562,7 +629,7 @@ Logs are saved to: outputs/logs/pipeline_run_YYYYMMDD_HHMMSS.log
     print("\n" + "=" * 80)
     print("PIPELINE SUMMARY")
     print("=" * 80)
-    print(f"Total Duration: {total_duration:.1f}s ({total_duration/60:.1f}m)")
+    print(f"Total Duration: {total_duration:.1f}s ({total_duration / 60:.1f}m)")
     print(f"Phases Executed: {phases_run}")
 
     if success:
@@ -577,5 +644,6 @@ Logs are saved to: outputs/logs/pipeline_run_YYYYMMDD_HHMMSS.log
         print(f"\nCheck log file for details: {log_file}")
         sys.exit(1)
 
-if __name__ == "__main__":
+
+if __name__=="__main__":
     main()
