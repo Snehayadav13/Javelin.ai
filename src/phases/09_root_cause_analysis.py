@@ -1147,18 +1147,18 @@ def run_root_cause_analysis(include_clusters: bool = True,
     # Save root causes
     root_causes_data = [asdict(rc) for rc in root_causes]
     root_causes_df = pd.DataFrame(root_causes_data)
-    root_causes_df.to_csv(ROOT_CAUSE_PATH, index=False)
+    root_causes_df.to_csv(ROOT_CAUSE_PATH, index=False, encoding='utf-8')
     print(f"  [OK] Saved: {ROOT_CAUSE_PATH}")
 
     # Save co-occurrence matrix
     if not cooccurrence_matrix.empty:
-        cooccurrence_matrix.to_csv(COOCCURRENCE_PATH)
+        cooccurrence_matrix.to_csv(COOCCURRENCE_PATH, encoding='utf-8')
         print(f"  [OK] Saved: {COOCCURRENCE_PATH}")
 
     # Save geographic patterns
     if geographic_patterns:
         geo_df = pd.DataFrame([asdict(p) for p in geographic_patterns])
-        geo_df.to_csv(GEOGRAPHIC_PATH, index=False)
+        geo_df.to_csv(GEOGRAPHIC_PATH, index=False, encoding='utf-8')
         print(f"  [OK] Saved: {GEOGRAPHIC_PATH}")
 
     # Save contributing factors
@@ -1188,13 +1188,13 @@ def run_root_cause_analysis(include_clusters: bool = True,
         ]
     }
 
-    with open(ROOT_CAUSE_SUMMARY_PATH, 'w') as f:
+    with open(ROOT_CAUSE_SUMMARY_PATH, 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2, default=str)
     print(f"  [OK] Saved: {ROOT_CAUSE_SUMMARY_PATH}")
 
     # Generate report
     report = generate_report(root_causes, cooccurrence_patterns, geographic_patterns, factors_df, site_df)
-    with open(ROOT_CAUSE_REPORT_PATH, 'w') as f:
+    with open(ROOT_CAUSE_REPORT_PATH, 'w', encoding='utf-8') as f:
         f.write(report)
     print(f"  [OK] Saved: {ROOT_CAUSE_REPORT_PATH}")
 

@@ -1072,12 +1072,12 @@ def run_site_clustering(algorithm: str = DEFAULT_ALGORITHM,
     site_df['cluster_name'] = site_df['cluster_id'].map(cluster_name_map).fillna('Noise')
 
     # Save site clusters
-    site_df.to_csv(SITE_CLUSTERS_PATH, index=False)
+    site_df.to_csv(SITE_CLUSTERS_PATH, index=False, encoding='utf-8')
     print(f"  [OK] Saved: {SITE_CLUSTERS_PATH}")
 
     # Save cluster profiles
     profiles_df = pd.DataFrame([asdict(p) for p in profiles])
-    profiles_df.to_csv(CLUSTER_PROFILES_PATH, index=False)
+    profiles_df.to_csv(CLUSTER_PROFILES_PATH, index=False, encoding='utf-8')
     print(f"  [OK] Saved: {CLUSTER_PROFILES_PATH}")
 
     # Save summary JSON
@@ -1102,13 +1102,13 @@ def run_site_clustering(algorithm: str = DEFAULT_ALGORITHM,
         ]
     }
 
-    with open(CLUSTER_SUMMARY_PATH, 'w') as f:
+    with open(CLUSTER_SUMMARY_PATH, 'w', encoding='utf-8') as f:
         json.dump(summary, f, indent=2, default=str)
     print(f"  [OK] Saved: {CLUSTER_SUMMARY_PATH}")
 
     # Generate report
     report = generate_report(result, site_df, labels)
-    with open(CLUSTER_REPORT_PATH, 'w') as f:
+    with open(CLUSTER_REPORT_PATH, 'w', encoding='utf-8') as f:
         f.write(report)
     print(f"  [OK] Saved: {CLUSTER_REPORT_PATH}")
 
