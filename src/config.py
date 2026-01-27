@@ -8,9 +8,10 @@ Importing from here ensures consistency across all phases.
 USAGE:
 ------
     from config import (
-        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR,
+        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR, PHASE_DIRS,
         COLUMN_MAPPINGS, FILE_PATTERNS, DQI_WEIGHTS,
-        THRESHOLDS, OUTPUT_FILES
+        THRESHOLDS, OUTPUT_FILES,
+        ensure_output_dirs, ensure_phase_dir, get_phase_dir, get_output_file
     )
 
 BACKWARD COMPATIBILITY:
@@ -19,7 +20,7 @@ BACKWARD COMPATIBILITY:
     This file is designed to be opt-in during the migration period.
 
 Author: JAVELIN.AI Team
-Version: 1.0.0
+Version: 1.1.0 (Phase-specific output directories)
 """
 
 from pathlib import Path
@@ -43,78 +44,99 @@ SRC_DIR = PROJECT_ROOT / "src"
 
 
 # ============================================================================
+# OUTPUT DIRECTORY STRUCTURE (Phase-specific)
+# ============================================================================
+
+PHASE_DIRS = {
+    'phase_00': OUTPUT_DIR / "phase_00",
+    'phase_01': OUTPUT_DIR / "phase_01",
+    'phase_02': OUTPUT_DIR / "phase_02",
+    'phase_03': OUTPUT_DIR / "phase_03",
+    'phase_04': OUTPUT_DIR / "phase_04",
+    'phase_05': OUTPUT_DIR / "phase_05",
+    'phase_06': OUTPUT_DIR / "phase_06",
+    'phase_07': OUTPUT_DIR / "phase_07",
+    'phase_08': OUTPUT_DIR / "phase_08",
+    'phase_09': OUTPUT_DIR / "phase_09",
+    'validation': OUTPUT_DIR / "validation",
+}
+
+# ============================================================================
 # OUTPUT FILE PATHS
 # ============================================================================
 
 OUTPUT_FILES = {
+    # Phase 00: Diagnostics
+    'diagnostics_report': PHASE_DIRS['phase_00'] / "diagnostics_report.txt",
+    'diagnostics_details': PHASE_DIRS['phase_00'] / "diagnostics_details.json",
+    'diagnostics_summary': PHASE_DIRS['phase_00'] / "diagnostics_summary.csv",
+
     # Phase 01: Discovery
-    'file_mapping': OUTPUT_DIR / "file_mapping.csv",
-    'column_report': OUTPUT_DIR / "column_report.csv",
-    'discovery_issues': OUTPUT_DIR / "discovery_issues.txt",
+    'file_mapping': PHASE_DIRS['phase_01'] / "file_mapping.csv",
+    'column_report': PHASE_DIRS['phase_01'] / "column_report.csv",
+    'discovery_issues': PHASE_DIRS['phase_01'] / "discovery_issues.txt",
 
     # Phase 02: Master Tables
-    'master_subject': OUTPUT_DIR / "master_subject.csv",
-    'master_site': OUTPUT_DIR / "master_site.csv",
-    'master_study': OUTPUT_DIR / "master_study.csv",
+    'master_subject': PHASE_DIRS['phase_02'] / "master_subject.csv",
+    'master_site': PHASE_DIRS['phase_02'] / "master_site.csv",
+    'master_study': PHASE_DIRS['phase_02'] / "master_study.csv",
 
     # Phase 03: DQI
-    'master_subject_with_dqi': OUTPUT_DIR / "master_subject_with_dqi.csv",
-    'master_site_with_dqi': OUTPUT_DIR / "master_site_with_dqi.csv",
-    'master_study_with_dqi': OUTPUT_DIR / "master_study_with_dqi.csv",
-    'master_region_with_dqi': OUTPUT_DIR / "master_region_with_dqi.csv",
-    'master_country_with_dqi': OUTPUT_DIR / "master_country_with_dqi.csv",
-    'dqi_weights': OUTPUT_DIR / "dqi_weights.csv",
-    'dqi_model_report': OUTPUT_DIR / "dqi_model_report.txt",
+    'master_subject_with_dqi': PHASE_DIRS['phase_03'] / "master_subject_with_dqi.csv",
+    'master_site_with_dqi': PHASE_DIRS['phase_03'] / "master_site_with_dqi.csv",
+    'master_study_with_dqi': PHASE_DIRS['phase_03'] / "master_study_with_dqi.csv",
+    'master_region_with_dqi': PHASE_DIRS['phase_03'] / "master_region_with_dqi.csv",
+    'master_country_with_dqi': PHASE_DIRS['phase_03'] / "master_country_with_dqi.csv",
+    'dqi_weights': PHASE_DIRS['phase_03'] / "dqi_weights.csv",
+    'dqi_model_report': PHASE_DIRS['phase_03'] / "dqi_model_report.txt",
 
     # Phase 04: Knowledge Graph
-    'knowledge_graph': OUTPUT_DIR / "knowledge_graph.graphml",
-    'knowledge_graph_nodes': OUTPUT_DIR / "knowledge_graph_nodes.csv",
-    'knowledge_graph_edges': OUTPUT_DIR / "knowledge_graph_edges.csv",
-    'knowledge_graph_summary': OUTPUT_DIR / "knowledge_graph_summary.json",
-    'knowledge_graph_report': OUTPUT_DIR / "knowledge_graph_report.txt",
-    'subgraph_high_risk': OUTPUT_DIR / "subgraph_high_risk.graphml",
+    'knowledge_graph': PHASE_DIRS['phase_04'] / "knowledge_graph.graphml",
+    'knowledge_graph_nodes': PHASE_DIRS['phase_04'] / "knowledge_graph_nodes.csv",
+    'knowledge_graph_edges': PHASE_DIRS['phase_04'] / "knowledge_graph_edges.csv",
+    'knowledge_graph_summary': PHASE_DIRS['phase_04'] / "knowledge_graph_summary.json",
+    'knowledge_graph_report': PHASE_DIRS['phase_04'] / "knowledge_graph_report.txt",
+    'subgraph_high_risk': PHASE_DIRS['phase_04'] / "subgraph_high_risk.graphml",
+    'subgraph_top_studies': PHASE_DIRS['phase_04'] / "subgraph_top_studies.graphml",
+    'subgraph_sample': PHASE_DIRS['phase_04'] / "subgraph_sample.graphml",
 
     # Phase 05: Recommendations
-    'recommendations_by_site': OUTPUT_DIR / "recommendations_by_site.csv",
-    'recommendations_by_region': OUTPUT_DIR / "recommendations_by_region.csv",
-    'recommendations_by_country': OUTPUT_DIR / "recommendations_by_country.csv",
-    'recommendations_report': OUTPUT_DIR / "recommendations_report.md",
+    'executive_summary': PHASE_DIRS['phase_05'] / "executive_summary.txt",
+    'recommendations_report': PHASE_DIRS['phase_05'] / "recommendations_report.md",
+    'recommendations_by_site': PHASE_DIRS['phase_05'] / "recommendations_by_site.csv",
+    'recommendations_by_region': PHASE_DIRS['phase_05'] / "recommendations_by_region.csv",
+    'recommendations_by_country': PHASE_DIRS['phase_05'] / "recommendations_by_country.csv",
+    'action_items': PHASE_DIRS['phase_05'] / "action_items.json",
 
     # Phase 06: Anomaly Detection
-    'anomalies_detected': OUTPUT_DIR / "anomalies_detected.csv",
-    'site_anomaly_scores': OUTPUT_DIR / "site_anomaly_scores.csv",
-    'anomaly_report': OUTPUT_DIR / "anomaly_report.md",
-    'anomaly_summary': OUTPUT_DIR / "anomaly_summary.json",
+    'anomalies_detected': PHASE_DIRS['phase_06'] / "anomalies_detected.csv",
+    'site_anomaly_scores': PHASE_DIRS['phase_06'] / "site_anomaly_scores.csv",
+    'anomaly_report': PHASE_DIRS['phase_06'] / "anomaly_report.md",
+    'anomaly_summary': PHASE_DIRS['phase_06'] / "anomaly_summary.json",
 
     # Phase 07: Multi-Agent
-    'multi_agent_recommendations': OUTPUT_DIR / "multi_agent_recommendations.csv",
-    'multi_agent_report': OUTPUT_DIR / "multi_agent_report.md",
-    'agent_analysis': OUTPUT_DIR / "agent_analysis.json",
-    'action_items': OUTPUT_DIR / "action_items.json",
+    'multi_agent_recommendations': PHASE_DIRS['phase_07'] / "multi_agent_recommendations.csv",
+    'multi_agent_report': PHASE_DIRS['phase_07'] / "multi_agent_report.md",
+    'agent_analysis': PHASE_DIRS['phase_07'] / "agent_analysis.json",
 
     # Phase 08: Clustering
-    'site_clusters': OUTPUT_DIR / "site_clusters.csv",
-    'cluster_profiles': OUTPUT_DIR / "cluster_profiles.csv",
-    'cluster_report': OUTPUT_DIR / "cluster_report.md",
-    'cluster_summary': OUTPUT_DIR / "cluster_summary.json",
-    'cluster_distribution': OUTPUT_DIR / "cluster_distribution.png",
-    'cluster_heatmap': OUTPUT_DIR / "cluster_heatmap.png",
-    'cluster_pca': OUTPUT_DIR / "cluster_pca.png",
+    'site_clusters': PHASE_DIRS['phase_08'] / "site_clusters.csv",
+    'cluster_profiles': PHASE_DIRS['phase_08'] / "cluster_profiles.csv",
+    'cluster_report': PHASE_DIRS['phase_08'] / "cluster_report.md",
+    'cluster_summary': PHASE_DIRS['phase_08'] / "cluster_summary.json",
+    'cluster_distribution': PHASE_DIRS['phase_08'] / "cluster_distribution.png",
+    'cluster_heatmap': PHASE_DIRS['phase_08'] / "cluster_heatmap.png",
+    'cluster_pca': PHASE_DIRS['phase_08'] / "cluster_pca.png",
 
     # Phase 09: Root Cause
-    'root_cause_analysis': OUTPUT_DIR / "root_cause_analysis.csv",
-    'root_cause_report': OUTPUT_DIR / "root_cause_report.md",
-    'root_cause_summary': OUTPUT_DIR / "root_cause_summary.json",
-    'issue_cooccurrence': OUTPUT_DIR / "issue_cooccurrence.csv",
-
-    # Diagnostics (Phase 00)
-    'diagnostics_report': OUTPUT_DIR / "diagnostics_report.txt",
-    'diagnostics_details': OUTPUT_DIR / "diagnostics_details.json",
-    'diagnostics_summary': OUTPUT_DIR / "diagnostics_summary.csv",
+    'root_cause_analysis': PHASE_DIRS['phase_09'] / "root_cause_analysis.csv",
+    'root_cause_report': PHASE_DIRS['phase_09'] / "root_cause_report.md",
+    'root_cause_summary': PHASE_DIRS['phase_09'] / "root_cause_summary.json",
+    'issue_cooccurrence': PHASE_DIRS['phase_09'] / "issue_cooccurrence.csv",
 
     # Validation
-    'sensitivity_analysis_results': OUTPUT_DIR / "sensitivity_analysis_results.csv",
-    'sensitivity_analysis_report': OUTPUT_DIR / "sensitivity_analysis_report.md",
+    'sensitivity_analysis_results': PHASE_DIRS['validation'] / "sensitivity_analysis_results.csv",
+    'sensitivity_analysis_report': PHASE_DIRS['validation'] / "sensitivity_analysis_report.md",
 }
 
 
@@ -441,8 +463,25 @@ RISK_COLORS = {
 # ============================================================================
 
 def ensure_output_dirs():
-    """Create output directory if it doesn't exist."""
+    """Create all output directories including phase-specific subdirectories."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    for phase_dir in PHASE_DIRS.values():
+        phase_dir.mkdir(parents=True, exist_ok=True)
+
+
+def ensure_phase_dir(phase: str):
+    """Create a specific phase directory."""
+    if phase in PHASE_DIRS:
+        PHASE_DIRS[phase].mkdir(parents=True, exist_ok=True)
+        return PHASE_DIRS[phase]
+    raise KeyError(f"Unknown phase: {phase}")
+
+
+def get_phase_dir(phase: str) -> Path:
+    """Get the directory path for a specific phase."""
+    if phase in PHASE_DIRS:
+        return PHASE_DIRS[phase]
+    raise KeyError(f"Unknown phase: {phase}")
 
 
 def get_output_file(file_key: str) -> Path:
@@ -483,6 +522,10 @@ if __name__ == "__main__":
     print(f"\nPROJECT_ROOT: {PROJECT_ROOT}")
     print(f"DATA_DIR: {DATA_DIR}")
     print(f"OUTPUT_DIR: {OUTPUT_DIR}")
+
+    print(f"\nPhase Directories:")
+    for phase, path in PHASE_DIRS.items():
+        print(f"  - {phase}: {path}")
 
     print(f"\nFile Types: {len(FILE_PATTERNS)}")
     for ft in FILE_PATTERNS:
