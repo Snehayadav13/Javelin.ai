@@ -56,6 +56,8 @@ from .aggregation import (
     calculate_risk_rates,
 )
 
+from .encoding_fix import force_utf8
+
 __all__ = [
     # Data Loader
     'find_column',
@@ -84,6 +86,8 @@ __all__ = [
     'aggregate_to_country',
     'assign_aggregated_risk',
     'calculate_risk_rates',
+    # Encoding
+    'force_utf8'
 ]
 
 __version__ = '1.0.0'

@@ -994,7 +994,7 @@ def run_multi_agent_analysis(model: str = "mistral", top_sites: int = TOP_SITES_
     # Save recommendations CSV
     recs_data = [asdict(r) for r in recommendations]
     recs_df = pd.DataFrame(recs_data)
-    recs_df.to_csv(RECOMMENDATIONS_PATH, index=False)
+    recs_df.to_csv(RECOMMENDATIONS_PATH, index=False, encoding='utf-8')
     print(f"  [OK] Saved: {RECOMMENDATIONS_PATH}")
 
     # Save detailed analysis JSON
@@ -1004,13 +1004,13 @@ def run_multi_agent_analysis(model: str = "mistral", top_sites: int = TOP_SITES_
         'portfolio_context': mas.portfolio_context,
         'site_analyses': {k: v for k, v in list(all_analyses.items())[:20]}
     }
-    with open(AGENT_ANALYSIS_PATH, 'w') as f:
+    with open(AGENT_ANALYSIS_PATH, 'w', encoding='utf-8') as f:
         json.dump(analysis_output, f, indent=2, default=str)
     print(f"  [OK] Saved: {AGENT_ANALYSIS_PATH}")
 
     # Generate and save report
     report = generate_report(recommendations, all_analyses, mas.portfolio_context)
-    with open(REPORT_PATH, 'w') as f:
+    with open(REPORT_PATH, 'w', encoding='utf-8') as f:
         f.write(report)
     print(f"  [OK] Saved: {REPORT_PATH}")
 
