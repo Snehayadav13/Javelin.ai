@@ -51,7 +51,7 @@ if str(_SRC_DIR) not in sys.path:
 
 try:
     from config import (
-        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR,
+        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR, PHASE_DIRS,
         COLUMN_MAPPINGS
     )
 
@@ -61,7 +61,7 @@ except ImportError:
     # Fallback: Define locally
     PROJECT_ROOT = _SRC_DIR.parent
     DATA_DIR = PROJECT_ROOT / "data"
-    OUTPUT_DIR = PROJECT_ROOT / "outputs"
+    PHASE_DIRS = {'phase_00':OUTPUT_DIR / "phase_00", 'phase_01':OUTPUT_DIR / "phase_01"}
 
     # Column mappings (fallback)
     COLUMN_MAPPINGS = {
@@ -105,7 +105,7 @@ except ImportError:
         },
     }
 
-FILE_MAPPING_PATH = OUTPUT_DIR / "file_mapping.csv"
+FILE_MAPPING_PATH = PHASE_DIRS['phase_01'] / "file_mapping.csv"
 
 
 # ============================================================================
@@ -545,15 +545,15 @@ class DiagnosticsRunner:
 
     def save_outputs(self):
         """Save all diagnostic outputs."""
-        OUTPUT_DIR.mkdir(exist_ok=True)
+        PHASE_DIRS['phase_00'].mkdir(parents=True, exist_ok=True)
 
-        json_path = OUTPUT_DIR / "diagnostics_details.json"
+        json_path = PHASE_DIRS['phase_00'] / "diagnostics_details.json"
         with open(json_path, 'w') as f:
             json.dump(self.findings, f, indent=2, default=str)
         print(f"\nSaved: {json_path}")
 
         report = self.generate_report()
-        report_path = OUTPUT_DIR / "diagnostics_report.txt"
+        report_path = PHASE_DIRS['phase_00'] / "diagnostics_report.txt"
         with open(report_path, 'w', encoding='utf-8') as f:
             f.write(report)
         print(f"Saved: {report_path}")

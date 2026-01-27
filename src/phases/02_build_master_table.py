@@ -40,7 +40,7 @@ if str(_SRC_DIR) not in sys.path:
 
 try:
     from config import (
-        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR, COLUMN_MAPPINGS, THRESHOLDS,
+        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR, PHASE_DIRS, COLUMN_MAPPINGS, THRESHOLDS,
         NUMERIC_ISSUE_COLUMNS, OUTLIER_CAP_COLUMNS, CATEGORICAL_COLUMNS
     )
     _USING_CONFIG = True
@@ -48,7 +48,7 @@ except ImportError:
     _USING_CONFIG = False
     PROJECT_ROOT = _SRC_DIR.parent
     DATA_DIR = PROJECT_ROOT / "data"
-    OUTPUT_DIR = PROJECT_ROOT / "outputs"
+    PHASE_DIRS = {'phase_01': OUTPUT_DIR / "phase_01", 'phase_02': OUTPUT_DIR / "phase_02"}
     COLUMN_MAPPINGS = {
         'edc_metrics': {
             'subject_id': ['Subject ID', 'Subject', 'SubjectID', 'SUBJECT ID'],
@@ -95,7 +95,7 @@ except ImportError:
     OUTLIER_CAP_COLUMNS = ['max_days_outstanding', 'max_days_page_missing', 'lab_issues_count', 'inactivated_forms_count']
     CATEGORICAL_COLUMNS = ['country', 'region', 'subject_status']
 
-FILE_MAPPING_PATH = OUTPUT_DIR / "file_mapping.csv"
+FILE_MAPPING_PATH = PHASE_DIRS['phase_01'] / "file_mapping.csv"
 
 # ============================================================================
 # DATA QUALITY FUNCTIONS
@@ -542,8 +542,8 @@ def aggregate_edrr(file_mapping_df, lookup_df):
 # ============================================================================
 
 def build_master_tables(output_dir=None):
-    _output_dir = Path(output_dir) if output_dir else OUTPUT_DIR
-    _file_mapping_path = _output_dir / "file_mapping.csv"
+    _output_dir = Path(output_dir) if output_dir else PHASE_DIRS['phase_02']
+    _file_mapping_path = PHASE_DIRS['phase_01'] / "file_mapping.csv"
 
     print("=" * 70)
     print("JAVELIN.AI - BUILD MASTER TABLES")

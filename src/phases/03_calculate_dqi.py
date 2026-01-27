@@ -49,7 +49,7 @@ if str(_SRC_DIR) not in sys.path:
 
 try:
     from config import (
-        PROJECT_ROOT, OUTPUT_DIR, DQI_WEIGHTS, THRESHOLDS
+        PROJECT_ROOT, OUTPUT_DIR, PHASE_DIRS, DQI_WEIGHTS, THRESHOLDS
     )
 
     FEATURE_WEIGHTS = DQI_WEIGHTS
@@ -57,7 +57,7 @@ try:
 except ImportError:
     _USING_CONFIG = False
     PROJECT_ROOT = _SRC_DIR.parent
-    OUTPUT_DIR = PROJECT_ROOT / "outputs"
+    PHASE_DIRS = {'phase_02': OUTPUT_DIR / "phase_02", 'phase_03': OUTPUT_DIR / "phase_03"}
 
     FEATURE_WEIGHTS = {
         'sae_pending_count':{'weight':0.20, 'tier':'Safety',
@@ -92,7 +92,7 @@ except ImportError:
         SITE_HIGH_PERCENTILE = 0.85
         SITE_MEDIUM_PERCENTILE = 0.50
 
-MASTER_SUBJECT_PATH = OUTPUT_DIR / "master_subject.csv"
+MASTER_SUBJECT_PATH = PHASE_DIRS['phase_02'] / "master_subject.csv"
 
 _total_weight = sum(f['weight'] for f in FEATURE_WEIGHTS.values())
 assert abs(_total_weight - 1.0) < 0.001, f"Weights must sum to 1.0, got {_total_weight}"
@@ -529,33 +529,33 @@ def calculate_dqi():
     print("\n" + "=" * 70)
     print("STEP 6: SAVE OUTPUTS")
     print("=" * 70)
-    OUTPUT_DIR.mkdir(exist_ok=True)
+    PHASE_DIRS['phase_03'].mkdir(parents=True, exist_ok=True)
     df_out = df.drop(columns=['is_high', 'is_medium'], errors='ignore')
 
-    df_out.to_csv(OUTPUT_DIR / "master_subject_with_dqi.csv", index=False)
+    df_out.to_csv(PHASE_DIRS['phase_03'] / "master_subject_with_dqi.csv", index=False)
     print(f"\n[OK] Saved: master_subject_with_dqi.csv ({len(df_out):,} subjects)")
 
-    site_df.to_csv(OUTPUT_DIR / "master_site_with_dqi.csv", index=False)
+    site_df.to_csv(PHASE_DIRS['phase_03'] / "master_site_with_dqi.csv", index=False)
     print(f"[OK] Saved: master_site_with_dqi.csv ({len(site_df):,} sites)")
 
-    study_df.to_csv(OUTPUT_DIR / "master_study_with_dqi.csv", index=False)
+    study_df.to_csv(PHASE_DIRS['phase_03'] / "master_study_with_dqi.csv", index=False)
     print(f"[OK] Saved: master_study_with_dqi.csv ({len(study_df)} studies)")
 
-    region_df.to_csv(OUTPUT_DIR / "master_region_with_dqi.csv", index=False)
+    region_df.to_csv(PHASE_DIRS['phase_03'] / "master_region_with_dqi.csv", index=False)
     print(f"[OK] Saved: master_region_with_dqi.csv ({len(region_df)} regions)")
 
-    country_df.to_csv(OUTPUT_DIR / "master_country_with_dqi.csv", index=False)
+    country_df.to_csv(PHASE_DIRS['phase_03'] / "master_country_with_dqi.csv", index=False)
     print(f"[OK] Saved: master_country_with_dqi.csv ({len(country_df)} countries)")
 
     # Save weights
     weights_data = [{'feature':f, 'weight':c['weight'], 'tier':c['tier'], 'rationale':c['rationale']} for f, c in
                     FEATURE_WEIGHTS.items()]
     weights_df = pd.DataFrame(weights_data).sort_values('weight', ascending=False)
-    weights_df.to_csv(OUTPUT_DIR / "dqi_weights.csv", index=False)
+    weights_df.to_csv(PHASE_DIRS['phase_03'] / "dqi_weights.csv", index=False)
     print(f"[OK] Saved: dqi_weights.csv")
 
     # Save report
-    with open(OUTPUT_DIR / "dqi_model_report.txt", 'w', encoding='utf-8') as f:
+    with open(PHASE_DIRS['phase_03'] / "dqi_model_report.txt", 'w', encoding='utf-8') as f:
         f.write("JAVELIN.AI - DATA QUALITY INDEX (DQI) MODEL REPORT\n")
         f.write("=" * 60 + "\n\n")
         f.write(f"Total Subjects: {len(df):,}\n")

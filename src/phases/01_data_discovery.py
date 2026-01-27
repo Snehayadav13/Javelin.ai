@@ -38,7 +38,7 @@ if str(_SRC_DIR) not in sys.path:
 
 try:
     from config import (
-        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR,
+        PROJECT_ROOT, DATA_DIR, OUTPUT_DIR, PHASE_DIRS,
         FILE_PATTERNS, EXPECTED_COLUMNS
     )
 
@@ -48,7 +48,7 @@ except ImportError:
     # Fallback: Define locally (maintains backward compatibility)
     PROJECT_ROOT = _SRC_DIR.parent
     DATA_DIR = PROJECT_ROOT / "data"
-    OUTPUT_DIR = PROJECT_ROOT / "outputs"
+    PHASE_DIRS = {'phase_01': OUTPUT_DIR / "phase_01"}
 
     # File type patterns - order matters (first match wins)
     FILE_PATTERNS = {
@@ -237,7 +237,7 @@ def run_discovery(data_dir=None, output_dir=None):
     """
     # Use provided directories or defaults
     _data_dir = Path(data_dir) if data_dir else DATA_DIR
-    _output_dir = Path(output_dir) if output_dir else OUTPUT_DIR
+    _output_dir = Path(output_dir) if output_dir else PHASE_DIRS['phase_01']
 
     print("=" * 70)
     print("JAVELIN.AI - DATA DISCOVERY")
