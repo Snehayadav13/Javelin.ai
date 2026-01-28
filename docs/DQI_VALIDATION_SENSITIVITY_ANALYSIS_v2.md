@@ -1,8 +1,7 @@
 # JAVELIN.AI - DQI Weights Validation & Sensitivity Analysis
 
 **Version:** 2.0  
-**Date:** January 26, 2026  
-**Status:** ✅ VALIDATED WITH REGULATORY ALIGNMENT & EMPIRICAL TESTING
+**Status:** VALIDATED WITH REGULATORY ALIGNMENT & EMPIRICAL TESTING
 
 ---
 
@@ -151,10 +150,10 @@ These weights are **defensible** but not **uniquely correct**. The sensitivity a
 
 | Reference | Finding | JAVELIN.AI Alignment |
 |-----------|---------|----------------------|
-| Sheetz N, et al. (2014) "Evaluating source data verification as a quality control measure in clinical trials." *Ther Innov Regul Sci* 48(6):671-680. | SDV identifies only small fraction of meaningful errors; risk-based approaches more effective | ✅ Supports algorithmic over exhaustive approach |
-| Hurley C, et al. (2016) "Risk based monitoring (RBM) tools for clinical trials: a systematic review." *Contemp Clin Trials* 51:15-27. | Multiple RBM tools exist; no standardized approach; highlights need for validated frameworks | ✅ JAVELIN.AI provides validated, documented methodology |
-| Wilson B, et al. (2014) "Defining a central monitoring capability: sharing the experience of TransCelerate BioPharma's approach, Part 1." *Ther Innov Regul Sci* 48(5):529-535. | Central monitoring using risk indicators effective for issue detection | ✅ DQI functions as composite risk indicator |
-| Lindblad AS, et al. (2014) "Central site monitoring: results from a test of accuracy in identifying trials and sites failing FDA inspection." *Clin Trials* 11(2):205-217. | Centralized monitoring can identify sites at risk of inspection failure | ✅ Supports algorithmic site risk stratification |
+| Sheetz N, et al. (2014) "Evaluating source data verification as a quality control measure in clinical trials." *Ther Innov Regul Sci* 48(6):671-680. | SDV identifies only small fraction of meaningful errors; risk-based approaches more effective | Supports algorithmic over exhaustive approach |
+| Hurley C, et al. (2016) "Risk based monitoring (RBM) tools for clinical trials: a systematic review." *Contemp Clin Trials* 51:15-27. | Multiple RBM tools exist; no standardized approach; highlights need for validated frameworks | JAVELIN.AI provides validated, documented methodology |
+| Wilson B, et al. (2014) "Defining a central monitoring capability: sharing the experience of TransCelerate BioPharma's approach, Part 1." *Ther Innov Regul Sci* 48(5):529-535. | Central monitoring using risk indicators effective for issue detection | DQI functions as composite risk indicator |
+| Lindblad AS, et al. (2014) "Central site monitoring: results from a test of accuracy in identifying trials and sites failing FDA inspection." *Clin Trials* 11(2):205-217. | Centralized monitoring can identify sites at risk of inspection failure | Supports algorithmic site risk stratification |
 
 ---
 
@@ -267,21 +266,21 @@ The SAE clinical override ensures that **no subject with pending SAEs is ever cl
 ### 6.1 DQI Model Checks
 
 | Check | Result | Status |
-|-------|--------|--------|
-| Weights sum to 100% | 100.0% | ✅ PASS |
-| SAE subjects in High risk | 4,531/4,531 (100%) | ✅ PASS |
-| Capture rate (subjects with issues flagged) | 12,858/12,858 (100%) | ✅ PASS |
-| Subject pyramid shape (Low > Medium > High) | 45,139 > 7,488 > 5,370 | ✅ PASS |
-| Site pyramid shape | 2,082 > 939 > 403 | ✅ PASS |
-| Score-category alignment | High mean DQI > Medium > Low | ✅ PASS |
+|-------|--------|------|
+| Weights sum to 100% | 100.0% | PASS |
+| SAE subjects in High risk | 4,531/4,531 (100%) | PASS |
+| Capture rate (subjects with issues flagged) | 12,858/12,858 (100%) | PASS |
+| Subject pyramid shape (Low > Medium > High) | 45,139 > 7,488 > 5,370 | PASS |
+| Site pyramid shape | 2,082 > 939 > 403 | PASS |
+| Score-category alignment | High mean DQI > Medium > Low | PASS |
 
 ### 6.2 Cross-Validation with Downstream Analysis
 
 | Finding | DQI Alignment |
 |---------|---------------|
-| Study explains 93.8% of DQI variance | ✅ Study-level aggregation correctly captures this |
-| Top 5 problem studies all flagged "High" | ✅ DQI correctly identifies problematic studies |
-| 89% of root causes = STUDY_DESIGN_ISSUE | ✅ Pattern detection identifies systemic vs. site issues |
+| Study explains 93.8% of DQI variance | Study-level aggregation correctly captures this |
+| Top 5 problem studies all flagged "High" | DQI correctly identifies problematic studies |
+| 89% of root causes = STUDY_DESIGN_ISSUE | Pattern detection identifies systemic vs. site issues |
 
 ### 6.3 Cluster Validation (GMM)
 
@@ -318,11 +317,11 @@ The clustering independently validates that DQI-derived risk categories correspo
 
 JAVELIN.AI's DQI weighting methodology is:
 
-✅ **Regulatory-Aligned:** Reflects priorities from ICH E6(R2) Section 5.0 and FDA RBM guidance  
-✅ **Industry-Consistent:** Aligns with TransCelerate RBQM framework principles  
-✅ **Transparently Derived:** Expert-derived weights with documented rationale  
-✅ **Empirically Validated:** Sensitivity analysis demonstrates robustness (max 1.55% shift under extreme conditions)  
-✅ **Clinically Sound:** 100% SAE capture maintained in all test scenarios  
+- **Regulatory-Aligned:** Reflects priorities from ICH E6(R2) Section 5.0 and FDA RBM guidance  
+- **Industry-Consistent:** Aligns with TransCelerate RBQM framework principles  
+- **Transparently Derived:** Expert-derived weights with documented rationale  
+- **Empirically Validated:** Sensitivity analysis demonstrates robustness (max 1.55% shift under extreme conditions)  
+- **Clinically Sound:** 100% SAE capture maintained in all test scenarios  
 
 **The weights are defensible expert judgments based on regulatory priorities, validated through sensitivity analysis to demonstrate operational robustness.**
 
