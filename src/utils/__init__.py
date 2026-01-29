@@ -56,7 +56,19 @@ from .aggregation import (
     calculate_risk_rates,
 )
 
-from .encoding_fix import force_utf8
+# Conditionally import encoding fix (only for non-Streamlit environments)
+import sys
+if 'streamlit' not in sys.modules:
+    try:
+        from .encoding_fix import force_utf8
+    except (ValueError, AttributeError):
+        # If encoding fix fails, define a no-op function
+        def force_utf8():
+            pass
+else:
+    # No-op function for Streamlit
+    def force_utf8():
+        pass
 
 __all__ = [
     # Data Loader
