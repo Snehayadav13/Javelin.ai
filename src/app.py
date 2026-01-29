@@ -100,6 +100,7 @@ st.markdown("""
     .metric-value { color: #ffffff; font-size: 2.25rem; font-weight: 700; }
     .metric-delta { font-size: 0.85rem; margin-top: 0.25rem; }
     .metric-row { display: flex; justify-content: space-between; padding: 0.3rem 0; }
+    .metric-context { color: #64748b; font-size: 0.8rem; margin-top: 0.35rem; }
     
     /* Alert Cards */
     .alert-card {
@@ -269,13 +270,13 @@ st.markdown("""
     }
     
     /* Align Download Button to the right */
-[data-testid="stDownloadButton"] {
+    [data-testid="stDownloadButton"] {
         width: 100%;
     }
     [data-testid="stDownloadButton"] button {
         width: 100%;
         display: block;
-        margin-left: auto; /* Push to right */
+        margin-left: auto;
     }
     
     /* Ensure the header aligns vertically with the button */
@@ -414,16 +415,10 @@ def export_to_csv(df: pd.DataFrame, filename: str):
 
 
 def render_export_header(title: str, df: pd.DataFrame, filename: str, key: str):
-    """
-    Renders a header and a download button side-by-side, perfectly aligned.
-    """
-    # Create columns: Title takes up most space, Button takes minimal necessary space
+    """Renders a header and a download button side-by-side, perfectly aligned."""
     c1, c2 = st.columns([8, 1])
-
     with c1:
-        # Use the custom class from Step 1 to remove bottom margins for better alignment
         st.markdown(f'<h5 class="export-header">{title}</h5>', unsafe_allow_html=True)
-
     with c2:
         if not df.empty:
             csv = export_to_csv(df, filename)
@@ -441,9 +436,7 @@ def render_export_header(title: str, df: pd.DataFrame, filename: str, key: str):
 
 def render_insight(title: str, text: str, icon: str = "💡"):
     import re
-    # Bold parsing
     html_text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
-
     html_code = (
         f'<div class="insight-box">'
         f'<div class="insight-title">{icon} {title}</div>'
@@ -464,8 +457,8 @@ def render_agent_insight(agent: str, insight: str):
     """, unsafe_allow_html=True)
 
 
-def render_metric_card(icon: str, label: str, value, breakdown: dict = None, delta: str = None):
-    # 1. Build the Breakdown Rows HTML (if any)
+def render_metric_card(icon: str, label: str, value, breakdown: dict = None, delta: str = None, context: str = None):
+    """Render a metric card with optional breakdown, delta, and context."""
     rows_html = ""
     if breakdown:
         row_items = []
@@ -475,31 +468,29 @@ def render_metric_card(icon: str, label: str, value, breakdown: dict = None, del
             c = colors.get(k, '#94a3b8')
             row_items.append(
                 f"<div class='metric-row'><span style='color:{c}'>{k}</span><span style='color:#fff;font-weight:600'>{v:,}</span></div>")
-
-        # Combine items and wrap them
         rows_inner = "".join(row_items)
         rows_html = f"<div style='margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid #334155'>{rows_inner}</div>"
 
-    # 2. Build the Delta HTML (if any)
     delta_html = ""
     if delta:
-        delta_color = '#10b981' if delta.startswith('+') or delta.startswith('↑') else '#ef4444' if delta.startswith(
-            '-') or delta.startswith('↓') else '#94a3b8'
+        delta_color = '#10b981' if delta.startswith('+') or delta.startswith('↑') else '#ef4444' if delta.startswith('-') or delta.startswith('↓') else '#94a3b8'
         delta_html = f"<div class='metric-delta' style='color:{delta_color}'>{delta}</div>"
 
-    # 3. Format the Value
+    context_html = ""
+    if context:
+        context_html = f"<div class='metric-context'>{context}</div>"
+
     val_str = f"{value:,}" if isinstance(value, (int, float)) else str(value)
 
-    # 4. Construct Final HTML (Flat, no indentation)
     html_code = (
         f'<div class="metric-card">'
         f'<div class="metric-label">{icon} {label}</div>'
         f'<div class="metric-value">{val_str}</div>'
         f'{delta_html}'
+        f'{context_html}'
         f'{rows_html}'
         f'</div>'
     )
-
     st.markdown(html_code, unsafe_allow_html=True)
 
 
@@ -532,8 +523,6 @@ def render_gauge(score: int, status: str):
 def render_site_profile_card(site_data: dict, show_actions: bool = True):
     risk = site_data.get('site_risk_category', site_data.get('risk_category', 'Unknown'))
     color = get_risk_color(risk)
-
-    # Determine badge class
     badge_type = 'critical' if risk=='High' else 'medium' if risk=='Medium' else 'low'
 
     html_code = (
@@ -717,6 +706,7 @@ def page_risk_landscape(data: dict):
     countries, regions, studies, sites = data['countries'], data['regions'], data['studies'], data['sites']
     cluster_profiles = data.get('cluster_profiles', pd.DataFrame())
     cluster_summary = data.get('cluster_summary', {})
+    agent_analysis = data.get('agent_analysis', {})
 
     st.markdown("### 🗺️ Risk Landscape")
     st.caption("Where are the problems concentrated?")
@@ -766,7 +756,6 @@ def page_risk_landscape(data: dict):
 
         # Top countries table with export
         st.markdown("---")
-        # KEY FIX 1: Unique key 'dl_countries'
         render_export_header("Top 10 Countries by Risk", countries, 'countries_risk.csv', 'dl_countries')
 
         if not countries.empty:
@@ -774,6 +763,20 @@ def page_risk_landscape(data: dict):
             df.columns = ['Country', 'Sites', 'Avg DQI']
             df['Avg DQI'] = df['Avg DQI'].round(4)
             st.dataframe(df, use_container_width=True, hide_index=True)
+
+        # ===== FIX #2a: GEOGRAPHIC INSIGHT (RESTORED) =====
+        if not regions.empty and not sites.empty:
+            worst = regions.loc[regions['avg_dqi_score'].idxmax()]
+            avg = sites['avg_dqi_score'].mean() if 'avg_dqi_score' in sites.columns else 0
+            pct = ((worst['avg_dqi_score'] / avg) - 1) * 100 if avg > 0 else 0
+            if pct > 10:
+                region_risks = agent_analysis.get('portfolio_context', {}).get('region_risks', {})
+                risk_level = region_risks.get(worst['region'], 'Elevated')
+                render_insight(
+                    "Geographic Concentration",
+                    f"**{worst['region']}** is {pct:.0f}% above portfolio average with {worst['site_count']:,} sites. "
+                    f"Multi-agent consensus: **{risk_level}** risk. Consider region-specific training and dedicated monitors."
+                )
 
     # --- TAB 2: STUDIES ---
     with tab2:
@@ -797,7 +800,6 @@ def page_risk_landscape(data: dict):
             st.plotly_chart(fig, use_container_width=True)
 
         # Study table with export
-        # KEY FIX 2: Correct Title ("Study Risk Ranking"), Correct Data (studies), and UNIQUE KEY ('dl_studies')
         render_export_header("Study Risk Ranking", studies, 'studies_risk.csv', 'dl_studies')
 
         if not studies.empty:
@@ -806,9 +808,24 @@ def page_risk_landscape(data: dict):
             df['Avg DQI'] = df['Avg DQI'].round(4)
             st.dataframe(df, use_container_width=True, hide_index=True)
 
+        # ===== FIX #2b: STUDY INSIGHT (RESTORED) =====
+        if not studies.empty and 'high_risk_rate' in studies.columns:
+            df = studies.copy()
+            high_risk_studies = len(df[df['high_risk_rate'] >= 0.2])
+            if high_risk_studies > 0:
+                worst = df.loc[df['high_risk_rate'].idxmax()]
+                study_risks = agent_analysis.get('portfolio_context', {}).get('study_risks', {})
+                agent_high_risk_count = sum(1 for r in study_risks.values() if r == 'High')
+                render_insight(
+                    "Study Concentration",
+                    f"**{high_risk_studies} studies** exceed 20% high-risk rate. **{worst['study']}** is highest at "
+                    f"**{worst['high_risk_rate']*100:.1f}%** ({worst['site_count']} sites, {worst['subject_count']:,} subjects). "
+                    f"Agent analysis confirms **{agent_high_risk_count} studies** as high-risk."
+                )
+
 
 # =============================================================================
-# PAGE 3: PATTERNS & SIGNALS (NEW)
+# PAGE 3: PATTERNS & SIGNALS
 # =============================================================================
 
 def page_patterns_signals(data: dict):
@@ -849,14 +866,12 @@ def page_patterns_signals(data: dict):
 
         with c1:
             st.markdown("##### Anomaly Score Distribution")
-            # --- FIX: MERGE DQI SCORES FROM SITES IF MISSING ---
             df = anomaly_scores.copy()
             if not df.empty and 'avg_dqi_score' not in df.columns:
                 if not sites.empty and 'site_id' in sites.columns:
                     site_metrics = sites[['site_id', 'avg_dqi_score']].drop_duplicates()
                     df = pd.merge(df, site_metrics, on='site_id', how='left')
 
-            # --- RENDER CHART ---
             if not df.empty and 'avg_dqi_score' in df.columns and 'anomaly_score' in df.columns:
                 fig = px.scatter(
                     df, x='avg_dqi_score', y='anomaly_score',
@@ -872,7 +887,6 @@ def page_patterns_signals(data: dict):
                     font=dict(color='#e2e8f0'),
                     xaxis=dict(gridcolor='#334155'), yaxis=dict(gridcolor='#334155')
                 )
-                # Add threshold line
                 threshold = df['anomaly_score'].quantile(0.9)
                 fig.add_hline(y=threshold, line_dash="dash", line_color="#ef4444",
                               annotation_text="90th percentile", annotation_position="top right")
@@ -1015,12 +1029,15 @@ def page_patterns_signals(data: dict):
         # Insight
         if cluster_summary.get('metrics'):
             metrics = cluster_summary['metrics']
+            crit_clusters = [c for c in cluster_summary.get('cluster_summary', []) if c.get('risk_level') == 'Critical']
             render_insight(
                 "Clustering Insight",
-                f"Sites grouped into **{cluster_summary.get('n_clusters', 0)} behavioral clusters** using Gaussian Mixture Models. "
-                f"Silhouette score: {metrics.get('silhouette_score', 0):.3f}. "
-                f"Sites in 'High Performers' cluster demonstrate best practices that can be replicated."
+                f"GMM clustering identified **{cluster_summary.get('n_clusters', 0)} distinct site groups** "
+                f"(silhouette score: {metrics.get('silhouette_score', 0):.3f}). "
+                f"**{len(crit_clusters)} clusters** ({sum(c.get('sites', 0) for c in crit_clusters)} sites) are critical priority. "
+                f"Sites in 'High Performers' cluster can serve as benchmarks for struggling sites."
             )
+
 
 # =============================================================================
 # PAGE 4: ROOT CAUSES
@@ -1096,9 +1113,12 @@ def page_root_causes(data: dict):
             </div>
         """, unsafe_allow_html=True)
 
+        # ===== FIX #5: ROOT CAUSE ACTIONS WITH IMPACT NUMBERS (RESTORED) =====
         actions = parse_list(rc.get('recommended_actions', []))
         if actions:
-            with st.expander(f"📋 {len(actions)} Recommended Actions"):
+            subj = rc['affected_subjects']
+            impact_text = f" → ~{int(subj/len(actions)):,} subjects per action" if subj > 0 and len(actions) > 0 else ""
+            with st.expander(f"📋 {len(actions)} Recommended Actions{impact_text}"):
                 for i, a in enumerate(actions, 1):
                     st.markdown(f"**{i}.** {a}")
 
@@ -1141,9 +1161,36 @@ def page_root_causes(data: dict):
                 <p style="color:#cbd5e1;font-size:0.85rem;margin-bottom:0.4rem"><span style="color:#8b5cf6">■</span> Purple = Moderate</p>
                 <p style="color:#cbd5e1;font-size:0.85rem"><span style="color:#3b82f6">■</span> Blue = Weak</p>
                 <hr style="border-color:#334155;margin:0.75rem 0">
-                <p style="color:#94a3b8;font-size:0.8rem">Correlated issues often share root causes.</p>
+                <p style="color:#94a3b8;font-size:0.8rem">Correlated issues often share root causes. Fixing one may resolve the other.</p>
             </div>
         """, unsafe_allow_html=True)
+
+    # ===== FIX #6: CO-OCCURRENCE INSIGHT (NEW) =====
+    if not cooccurrence.empty:
+        # Find the strongest correlation pair
+        df = cooccurrence.copy()
+        first_col = df.columns[0]
+        if df[first_col].dtype == 'object':
+            labels = df[first_col].tolist()
+            matrix = df.iloc[:, 1:].values.astype(float)
+        else:
+            labels = list(df.columns)
+            matrix = df.values.astype(float)
+
+        # Find max off-diagonal correlation
+        np.fill_diagonal(matrix, 0)
+        if matrix.size > 0:
+            max_idx = np.unravel_index(np.argmax(matrix), matrix.shape)
+            max_corr = matrix[max_idx]
+            if max_corr > 0.3 and max_idx[0] < len(labels) and max_idx[1] < len(labels):
+                issue1 = format_issue(str(labels[max_idx[0]]))
+                issue2 = format_issue(str(labels[max_idx[1]]))
+                render_insight(
+                    "Co-occurrence Pattern",
+                    f"**{issue1}** and **{issue2}** have the strongest correlation ({max_corr:.2f}). "
+                    f"Sites with one issue are likely to have the other. Addressing the shared root cause "
+                    f"could resolve both problems simultaneously."
+                )
 
 
 # =============================================================================
@@ -1261,28 +1308,33 @@ def page_action_center(data: dict):
         for a in week[:4]:
             render_action(a, 'week')
 
-    # Summary
+    # ===== FIX #7: ACTION SUMMARY WITH CONTEXT VERBIAGE (RESTORED) =====
     st.markdown("---")
     st.markdown("##### 📋 Action Summary")
+
+    total_sites_affected = sum(a['sites'] for a in actions)
+    total_subjects_affected = sum(a['subjects'] for a in actions)
+
     cols = st.columns(4)
     summaries = [
-        ("Total Actions", len(actions), "#3b82f6"),
-        ("Immediate", len(immediate), "#ef4444"),
-        ("This Week", len(week), "#f59e0b"),
-        ("This Month", len(month), "#10b981")
+        ("Total Actions", len(actions), "#3b82f6", f"Across {total_sites_affected:,} sites"),
+        ("Immediate", len(immediate), "#ef4444", "Do today" if immediate else "None pending"),
+        ("This Week", len(week), "#f59e0b", f"{sum(a['sites'] for a in week):,} sites" if week else "None pending"),
+        ("This Month", len(month), "#10b981", "Lower priority" if month else "None scheduled")
     ]
-    for col, (label, val, color) in zip(cols, summaries):
+    for col, (label, val, color, context) in zip(cols, summaries):
         with col:
             st.markdown(f"""
                 <div class="metric-card" style="text-align:center">
                     <div class="metric-label">{label}</div>
                     <div class="metric-value" style="color:{color}">{val}</div>
+                    <div class="metric-context">{context}</div>
                 </div>
             """, unsafe_allow_html=True)
 
 
 # =============================================================================
-# PAGE 6: DEEP DIVE (NEW)
+# PAGE 6: DEEP DIVE
 # =============================================================================
 
 def page_deep_dive(data: dict):
@@ -1292,6 +1344,7 @@ def page_deep_dive(data: dict):
     studies = data.get('studies', pd.DataFrame())
     recommendations = data.get('recommendations', pd.DataFrame())
     clusters = data.get('clusters', pd.DataFrame())
+    agent_analysis = data.get('agent_analysis', {})
 
     st.markdown("### 🔎 Deep Dive")
     st.caption("Study → Site → Subject exploration")
@@ -1331,7 +1384,7 @@ def page_deep_dive(data: dict):
 
     st.markdown("---")
 
-    # Study Overview (if specific study selected)
+    # ===== FIX #8a: STUDY OVERVIEW WITH INSIGHT (NEW) =====
     if selected_study != 'All Studies' and not studies.empty:
         study_data = studies[studies['study'] == selected_study].iloc[0] if len(studies[studies['study'] == selected_study]) > 0 else None
         if study_data is not None:
@@ -1355,15 +1408,39 @@ def page_deep_dive(data: dict):
                         <div class="metric-value" style="color:{color};font-size:1.5rem">{risk}</div>
                     </div>
                 """, unsafe_allow_html=True)
+
+            # Study-specific insight
+            study_risks = agent_analysis.get('portfolio_context', {}).get('study_risks', {})
+            agent_risk = study_risks.get(selected_study, 'Unknown')
+            if hr_rate > 15:
+                render_insight(
+                    "Study Analysis",
+                    f"**{selected_study}** has a **{hr_rate:.1f}%** high-risk rate across {int(study_data.get('site_count', 0))} sites. "
+                    f"Multi-agent consensus: **{agent_risk}** risk. Focus on sites with highest DQI scores for maximum impact."
+                )
             st.markdown("---")
 
-    # Site Profile (if specific site selected)
+    # ===== FIX #8b: SITE PROFILE WITH INSIGHT (NEW) =====
     if selected_site != 'All Sites' and not sites.empty:
         site_data = filtered_sites[filtered_sites['site_id'] == selected_site]
         if not site_data.empty:
             site_row = site_data.iloc[0].to_dict()
             st.markdown("##### 🏥 Site Profile")
             render_site_profile_card(site_row)
+
+            # Site-specific insight
+            risk = site_row.get('site_risk_category', site_row.get('risk_category', 'Unknown'))
+            dqi = site_row.get('avg_dqi_score', 0)
+            subj_count = site_row.get('subject_count', 0)
+            high_risk_count = site_row.get('high_risk_count', 0)
+
+            if risk == 'High' or dqi > 0.1:
+                render_insight(
+                    "Site Analysis",
+                    f"**Site {selected_site}** is classified as **{risk}** risk with DQI score {dqi:.4f}. "
+                    f"**{high_risk_count}** of {subj_count} subjects ({int(high_risk_count/subj_count*100) if subj_count > 0 else 0}%) are high-risk. "
+                    f"Review pending SAEs and missing visits as priority actions."
+                )
 
             # Site recommendations
             if not recommendations.empty and 'site_id' in recommendations.columns:
@@ -1379,8 +1456,7 @@ def page_deep_dive(data: dict):
 
     # Subject Data Table
     st.markdown("##### 👥 Subject Data")
-    # For this one, since you have a caption, we tweak it slightly or just use the header:
-    render_export_header(f"👥 Subject Data ({len(filtered_subjects):,} subjects)", filtered_subjects,
+    render_export_header(f"Subject Data ({len(filtered_subjects):,} subjects)", filtered_subjects,
                          'subjects_export.csv', 'dl_subjects')
 
     # Display columns
@@ -1393,7 +1469,6 @@ def page_deep_dive(data: dict):
         if 'dqi_score' in df_display.columns:
             df_display['dqi_score'] = df_display['dqi_score'].round(4)
 
-        # Color-code by risk
         st.dataframe(
             df_display.head(100),
             use_container_width=True,
